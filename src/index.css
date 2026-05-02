@@ -89,6 +89,31 @@ a:hover {
   font-size: 20px;
   cursor: pointer;
 }
+.sidebar-rail-toggle {
+  display: none;
+  margin-right: 10px;
+  min-width: 36px;
+  height: 34px;
+  padding: 0 8px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.sidebar-rail-toggle:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+@media (min-width: 901px) {
+  .sidebar-rail-toggle {
+    display: inline-flex;
+  }
+}
 .appbar-brand {
   display: flex;
   align-items: baseline;
@@ -262,6 +287,19 @@ a:hover {
 }
 .sidebar-footer-grades .g-cp {
   color: var(--grade-cp);
+}
+
+@media (min-width: 901px) {
+  .app.app--sidebar-collapsed {
+    grid-template-columns: 0 1fr;
+  }
+  .app.app--sidebar-collapsed .sidebar {
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    border-right-width: 0;
+    min-width: 0;
+  }
 }
 
 .main {

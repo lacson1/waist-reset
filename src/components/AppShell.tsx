@@ -1,5 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+
+const SIDEBAR_COLLAPSED_KEY = 'wr_sidebar_collapsed'
+
+function useDesktopNav() {
+  const [desktop, setDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 901px)').matches : true,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)')
+    const onChange = () => setDesktop(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return desktop
+}
 
 const NAV_GROUPS: { id: string; label: string; items: { to: string; label: string }[] }[] = [
   {
@@ -64,7 +79,22 @@ const NAV_GROUPS: { id: string; label: string; items: { to: string; label: strin
 ]
 
 export function AppShell() {
+  const desktopNav = useDesktopNav()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0')
+  }, [sidebarCollapsed])
+
+  useEffect(() => {
+    if (desktopNav) setSidebarOpen(false)
+  }, [desktopNav])
+
+  const sidebarHiddenFromAt = desktopNav && sidebarCollapsed
 
   return (
     <>
@@ -72,10 +102,22 @@ export function AppShell() {
         <button
           type="button"
           className="menu-toggle"
-          aria-label="Menu"
+          aria-label="Open navigation menu"
+          aria-expanded={sidebarOpen}
+          aria-controls="sidebar"
           onClick={() => setSidebarOpen((o) => !o)}
         >
           ☰
+        </button>
+        <button
+          type="button"
+          className="sidebar-rail-toggle"
+          aria-label={sidebarCollapsed ? 'Expand guide sidebar' : 'Collapse guide sidebar'}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="sidebar"
+          onClick={() => setSidebarCollapsed((c) => !c)}
+        >
+          {sidebarCollapsed ? '»' : '«'}
         </button>
         <div className="appbar-brand">
           <span className="lacbis">LACBIS</span>
@@ -87,8 +129,12 @@ export function AppShell() {
         <div className="appbar-meta">React · Offline-ready</div>
       </header>
 
-      <div className="app">
-        <aside className={`sidebar${sidebarOpen ? ' open' : ''}`} id="sidebar">
+      <div className={`app${sidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
+        <aside
+          className={`sidebar${sidebarOpen ? ' open' : ''}`}
+          id="sidebar"
+          aria-hidden={sidebarHiddenFromAt ? true : undefined}
+        >
           <div className="brand">
             <div className="brand-logo">
               <div className="brand-mark">VF</div>
