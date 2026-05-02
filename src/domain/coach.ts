@@ -28,12 +28,19 @@ export interface RiskTierResult {
   rows: RiskRow[]
 }
 
+/** Prefer latest logged TG/HDL on any entry; fall back to baseline (same rule as Progress summary). */
+function latestTgHdl(b: Baseline, entries: ProgressEntry[]): { tg: number | null; hdl: number | null } {
+  const rev = [...entries].reverse()
+  const tg = rev.find((e) => e.tg != null)?.tg ?? b.tg ?? null
+  const hdl = rev.find((e) => e.hdl != null)?.hdl ?? b.hdl ?? null
+  return { tg, hdl }
+}
+
 export function riskTier(baseline: Baseline | null, entries: ProgressEntry[]): RiskTierResult {
   const b = baseline || ({} as Baseline)
   const latestWaist = entries.length ? [...entries].reverse().find((e) => e.waist != null) : null
   const waist = latestWaist?.waist ?? b.waist
-  const tg = b.tg
-  const hdl = b.hdl
+  const { tg, hdl } = latestTgHdl(b, entries)
   const glu = b.glucose
   const crp = b.hscrp
 
@@ -118,6 +125,8 @@ export interface CoachRec {
   level: RecLevel
   head: string
   detail: string
+  /** Short trace of which inputs / thresholds fired — for transparency and clinical review */
+  signals: string[]
 }
 
 export function buildRecommendations(state: ProgressState): CoachRec[] {
@@ -132,17 +141,28 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       head: 'Set your baseline',
       detail:
         'Open the Progress tab and complete sex, age, height, activity, weight, and waist. The coach cannot personalise without these.',
+      signals: ['Baseline start date missing — risk, phase kcal, and waist slope are inactive until Progress is saved.'],
     })
     return recs
   }
 
   const pers = computePersonal(b)
   if (!pers.tdee) {
+    const missing: string[] = []
+    if (!b.sex) missing.push('sex')
+    if (b.age == null) missing.push('age')
+    if (b.weight == null) missing.push('weight')
+    if (b.height == null) missing.push('height')
+    if (!b.activity) missing.push('activity multiplier')
     recs.push({
       level: 'warn',
       head: 'Missing personalisation inputs',
       detail:
         'Add sex, age, weight, height, and activity level to compute your personalised calorie target. Without these, you are guessing at the deficit.',
+      signals:
+        missing.length > 0
+          ? [`TDEE not computable — still need: ${missing.join(', ')}.`]
+          : ['TDEE not computable — check numeric fields on baseline.'],
     })
   }
 
@@ -153,6 +173,11 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       head: 'High metabolic risk · NAFLD / IR branch',
       detail:
         'TG:HDL ≥3.5 or fasting glucose ≥126 or waist ≥high threshold. Prioritise: (1) enforce strict 16h fast, (2) no carbs after 15:00, (3) add bitter melon / cinnamon to every meal, (4) push resistance training to 4×/week. Discuss with your physician before starting.',
+      signals: [
+        `Risk tier: high (score ${risk.score})`,
+        ...risk.rows.map((r) => `${r.label} ${r.value} → ${r.cls === 'hi' ? 'above' : r.cls === 'mod' ? 'borderline' : 'within'} target band`),
+        'TG/HDL use latest value in your measurement log when present, otherwise baseline.',
+      ],
     })
   } else if (risk.tier === 'mod') {
     recs.push({
@@ -160,6 +185,10 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       head: 'Moderate metabolic risk',
       detail:
         'You sit above target on 1–2 markers. Lean into fibre doses (2×/day non-negotiable), green tea 3×/day, and log TG:HDL again at week 12.',
+      signals: [
+        `Risk tier: moderate (score ${risk.score})`,
+        ...risk.rows.map((r) => `${r.label}: ${r.value}`),
+      ],
     })
   } else if (risk.tier === 'low' && risk.rows.length) {
     recs.push({
@@ -167,17 +196,25 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       head: 'Low metabolic risk — protective zone',
       detail:
         'Keep the foundation: protein-first, 14h fast minimum, NEAT ≥8k steps. Focus on consolidation rather than aggression.',
+      signals: [`Risk tier: low (score ${risk.score})`, ...risk.rows.map((r) => `${r.label}: ${r.value}`)],
     })
   }
 
   const slope = waistSlope(entries, 14)
   if (slope != null) {
+    const cutoff = Date.now() - 14 * 86400000
+    const nWaist = entries.filter((e) => e.waist != null && new Date(e.date).getTime() >= cutoff).length
     if (slope >= -0.05 && phase.num === 1 && phase.totalDays > 14) {
       recs.push({
         level: 'warn',
         head: 'Waist plateau detected (14-day slope ≈ 0)',
         detail:
           "You're in Phase 1 with no movement. Three levers in order: (1) audit adherence — look for missed fibre doses, (2) push NEAT to 10k steps, (3) consider early Phase 2 transition if your first bloodwork has landed.",
+        signals: [
+          `14-day linear waist slope ≈ ${slope.toFixed(2)} cm/week`,
+          `Phase 1 · protocol day ${phase.totalDays + 1}`,
+          `${nWaist} waist points in the last 14 days (≥4 required for slope)`,
+        ],
       })
     } else if (slope < -0.3) {
       recs.push({
@@ -185,6 +222,7 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
         head: `Strong fat loss trajectory (${slope.toFixed(2)} cm/wk)`,
         detail:
           'Above average. Hold current inputs, do not add more restriction. Over-aggressive cuts trigger cortisol rebound.',
+        signals: [`14-day waist slope ${slope.toFixed(2)} cm/week`, `${nWaist} waist points in window`],
       })
     } else if (slope > 0.2) {
       recs.push({
@@ -192,6 +230,7 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
         head: `Waist trending UP (${slope.toFixed(2)} cm/wk)`,
         detail:
           'Something has shifted — usually (a) late eating creeping in, (b) carb portions expanding, (c) stress/cortisol. Audit the last 7 days of meals and sleep.',
+        signals: [`14-day waist slope +${slope.toFixed(2)} cm/week`, `${nWaist} waist points in window`],
       })
     }
   }
@@ -205,12 +244,20 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
         head: 'Adherence below 70% — results will stall here',
         detail:
           "Don't add complexity — strip it back. Pick 3 rules only this week: protein-first, 14h fast, fibre ×2. Master these before adding others back.",
+        signals: [
+          `Rolling mean adherence (last ${recentAdh.length} logged days): ${Math.round(avg)}%`,
+          'Threshold: <70% triggers simplification advice',
+        ],
       })
     } else if (avg >= 85) {
       recs.push({
         level: 'positive',
         head: `Adherence excellent (${Math.round(avg)}%)`,
         detail: 'This is where results compound. Hold pattern — consistency beats intensity.',
+        signals: [
+          `Rolling mean adherence (last ${recentAdh.length} logged days): ${Math.round(avg)}%`,
+          'Threshold: ≥85% positive reinforcement',
+        ],
       })
     }
   }
@@ -235,6 +282,10 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
           level: 'warn',
           head: `Weak point: "${item.label}" hit on only ${Math.round(weakest.pct * 100)}% of days`,
           detail: `This is your lever. ${item.mech} — fixing this one item alone changes outcomes. Pick one friction source and remove it this week.`,
+          signals: [
+            `Checklist coverage: last ${withChecklist.length} days with saved checklist`,
+            `Weakest habit key: "${weakest.k}" (${Math.round(weakest.pct * 100)}% checked)`,
+          ],
         })
       }
     }
@@ -247,6 +298,7 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       head: `Phase 2 transition in ${wl} week(s)`,
       detail:
         'Book retest labs (TG/HDL/glucose/hs-CRP) for end of this week. Phase 2 introduces 28% deficit + weekend refeeds — you need fresh bloodwork to dial it in.',
+      signals: [`Phase 1 weeks remaining: ${wl}`, `Protocol day ${phase.totalDays + 1} of 126`],
     })
   }
 
@@ -255,6 +307,10 @@ export function buildRecommendations(state: ProgressState): CoachRec[] {
       level: 'positive',
       head: 'Logging in progress',
       detail: 'Keep logging daily. After ~2 weeks the coach will surface plateaus, weak points, and phase adjustments.',
+      signals: [
+        `Total log entries: ${entries.length}`,
+        entries.length < 7 ? 'Coach needs ~7 days of adherence or waist data for most signals.' : 'Enough data for waist slope when ≥4 waist points in 14 days.',
+      ],
     })
   }
 

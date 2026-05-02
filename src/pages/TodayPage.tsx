@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgressStore, mergeTodayChecklist, quickLogToday } from '../store/progressStore'
 import { computePersonal, currentPhase, greetingText, phaseKcal, phaseKcalNote } from '../domain/personalisation'
-import { DEFAULT_CHECKLIST_ITEMS } from '../domain/coach'
+import { buildRecommendations, DEFAULT_CHECKLIST_ITEMS } from '../domain/coach'
 import { computeNextActions, fastStatus } from '../domain/todayActions'
 
 export function TodayPage() {
@@ -21,6 +21,10 @@ export function TodayPage() {
   const kcalNote = phaseKcalNote(phase)
   const next = useMemo(() => computeNextActions(phase, baseline), [phase, baseline])
   const fast = fastStatus()
+  const coachPreview = useMemo(
+    () => buildRecommendations({ baseline, entries }).slice(0, 2),
+    [baseline, entries],
+  )
 
   const today = new Date().toISOString().slice(0, 10)
   const todayEntry = entries.find((e) => e.date === today)
@@ -89,6 +93,56 @@ export function TodayPage() {
           <div className="kpi-value">{fast.label}</div>
           <div className="kpi-sub">{fast.sub}</div>
         </div>
+      </div>
+
+      <div className="card playbook-card">
+        <div className="section-title">Today&apos;s playbook</div>
+        <p className="playbook-lead">
+          Use your numbers below, then pick structure and food. The example day is generic — your phase kcal and protein
+          targets are the protocol truth.
+        </p>
+        <div className="playbook-grid">
+          <Link className="playbook-tile" to="/daily">
+            <strong>Daily structure</strong>
+            <span>Example clock for General vs African emphasis</span>
+          </Link>
+          <Link className="playbook-tile" to="/plate">
+            <strong>Plate system</strong>
+            <span>Rest / training / soup templates</span>
+          </Link>
+          <Link className="playbook-tile" to="/swaps">
+            <strong>Food swaps</strong>
+            <span>High-impact substitutions by category</span>
+          </Link>
+          <Link className="playbook-tile" to="/meals">
+            <strong>Meal builder</strong>
+            <span>Meal-order rules + links to tools</span>
+          </Link>
+          <Link className="playbook-tile" to="/coach">
+            <strong>Coach</strong>
+            <span>Risk, adherence, and waist trends</span>
+          </Link>
+          <Link className="playbook-tile" to="/progress">
+            <strong>My Progress</strong>
+            <span>Baseline, labs on entries, charts</span>
+          </Link>
+        </div>
+        {coachPreview.length > 0 && (
+          <div className="playbook-coach-preview">
+            <div className="playbook-coach-label">Top signals from Coach</div>
+            <ul className="playbook-coach-list">
+              {coachPreview.map((r, i) => (
+                <li key={`${r.head}-${i}`}>
+                  <span className={`playbook-coach-sev playbook-coach-sev--${r.level}`}>{r.level}</span>
+                  <span className="playbook-coach-head">{r.head}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/coach" className="playbook-coach-more">
+              Open Coach for full detail and trace
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="card">

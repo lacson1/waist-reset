@@ -10,7 +10,8 @@ export function BiomarkersPage() {
           <h1>Biomarkers</h1>
           <div className="topbar-sub">
             Targets and cadence aligned with visceral-fat and insulin-resistance pathways. Log what you have on{' '}
-            <Link to="/progress">My Progress</Link>.
+            <Link to="/progress">My Progress</Link> — optional TG/HDL on dated rows feed Coach risk and the lab snapshot
+            table.
           </div>
         </div>
       </div>

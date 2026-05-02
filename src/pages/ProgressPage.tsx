@@ -58,6 +58,19 @@ export function ProgressPage() {
 
   const personal = useMemo(() => computePersonal(bForm), [bForm])
 
+  const labSnapshotRows = useMemo(() => {
+    const filtered = [...entries]
+      .filter((e) => e.tg != null || e.hdl != null)
+      .sort((a, b) => b.date.localeCompare(a.date))
+    return filtered.slice(0, 12).map((e, idx) => {
+      const ratio = computeTgHdl(e.tg, e.hdl)
+      const older = filtered[idx + 1]
+      const olderRatio = older ? computeTgHdl(older.tg, older.hdl) : null
+      const deltaRatio = ratio != null && olderRatio != null ? ratio - olderRatio : null
+      return { date: e.date, tg: e.tg, hdl: e.hdl, ratio, deltaRatio }
+    })
+  }, [entries])
+
   const showStatus = useCallback((msg: string, kind: 'ok' | 'warn' | 'empty') => {
     setStatus({ msg, kind })
     setTimeout(() => setStatus((s) => (s?.msg === msg ? null : s)), 4000)
@@ -491,6 +504,46 @@ export function ProgressPage() {
       </div>
 
       <ProgressCharts baseline={baseline} entries={entries} />
+
+      {labSnapshotRows.length > 0 && (
+        <div className="card lab-snap-card">
+          <div className="section-title">Lab snapshots from your log</div>
+          <p className="lab-snap-lead">
+            TG and HDL saved on measurement rows (retest days). <strong>Coach</strong> uses the latest pair here or on
+            baseline when logs are empty. Δ ratio vs your previous logged pair.
+          </p>
+          <div className="table-scroll">
+            <table className="data-table lab-snap-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>TG</th>
+                  <th>HDL</th>
+                  <th>TG:HDL</th>
+                  <th>Δ vs prior log</th>
+                </tr>
+              </thead>
+              <tbody>
+                {labSnapshotRows.map((row) => (
+                  <tr key={row.date}>
+                    <td>
+                      <strong>{row.date}</strong>
+                    </td>
+                    <td>{row.tg ?? '—'}</td>
+                    <td>{row.hdl ?? '—'}</td>
+                    <td>{row.ratio != null ? fmt(row.ratio, 2) : '—'}</td>
+                    <td>
+                      {row.deltaRatio == null
+                        ? '—'
+                        : `${row.deltaRatio > 0 ? '+' : ''}${fmt(row.deltaRatio, 2)}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="log-header">

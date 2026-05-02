@@ -77,8 +77,8 @@ export function NumbersPage() {
           <div className="eyebrow">Personalisation</div>
           <h1>Your numbers</h1>
           <div className="topbar-sub">
-            Mifflin–St Jeor TDEE, deficit band, protein range, WHtR, and carb cycling placeholders from the
-            original calculator. Save baseline on <Link to="/progress">My Progress</Link> for Coach and Today.
+            Mifflin–St Jeor TDEE, deficit band, protein range, WHtR, and train/rest carb bands derived from remaining
+            kcal after protein. Save baseline on <Link to="/progress">My Progress</Link> for Coach and Today.
           </div>
         </div>
         <div className="topbar-right">

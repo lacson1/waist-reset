@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useProgressStore } from '../store/progressStore'
+import { computePersonal, currentPhase, phaseKcal, phaseKcalNote } from '../domain/personalisation'
 import { TIMELINE_AFRICAN, TIMELINE_GENERAL, type TimelineEntry } from '../data/timelines'
 
 function TimelineRow({ e }: { e: TimelineEntry }) {
@@ -17,8 +19,14 @@ function TimelineRow({ e }: { e: TimelineEntry }) {
 }
 
 export function DailyPage() {
+  const baseline = useProgressStore((s) => s.baseline)
   const [tab, setTab] = useState<'general' | 'african'>('general')
   const rows = tab === 'general' ? TIMELINE_GENERAL : TIMELINE_AFRICAN
+
+  const phase = useMemo(() => currentPhase(baseline), [baseline])
+  const personal = useMemo(() => computePersonal(baseline), [baseline])
+  const kcal = phaseKcal(phase, baseline)
+  const kcalNote = phaseKcalNote(phase)
 
   return (
     <section className="view active">
@@ -32,6 +40,22 @@ export function DailyPage() {
           </div>
         </div>
       </div>
+
+      {baseline?.date && (
+        <div className="card daily-strip-card">
+          <div className="daily-strip-title">Your protocol targets (from My Progress)</div>
+          <div className="daily-strip-chips">
+            <span className="chip teal">
+              Phase {phase.num} · {phase.name}
+            </span>
+            {kcal != null && <span className="chip gold">{kcal} kcal · {kcalNote}</span>}
+            {personal.protein != null && <span className="chip clay">~{personal.protein} g protein / day</span>}
+          </div>
+          <p className="daily-strip-note">
+            Timings below are illustrative; keep protein and fibre anchors aligned with these targets.
+          </p>
+        </div>
+      )}
 
       <div className="sub-tabs" role="tablist">
         <button

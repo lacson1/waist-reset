@@ -66,6 +66,13 @@ export function CoachPage() {
             <div key={r.head} className={`rec ${r.level}`}>
               <div className="rec-head">{r.head}</div>
               <div className="rec-detail">{r.detail}</div>
+              {r.signals.length > 0 && (
+                <ul className="rec-signals" aria-label="Signals for this recommendation">
+                  {r.signals.map((s) => (
+                    <li key={s}>{s}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
