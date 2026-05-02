@@ -1223,7 +1223,7 @@ a:hover {
   display: grid;
   grid-template-columns: minmax(156px, 198px) minmax(0, 1fr);
   gap: 20px 24px;
-  align-items: start;
+  align-items: stretch;
   padding: 18px 18px 20px;
   flex: 1;
 }
@@ -1231,12 +1231,13 @@ a:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 14px 10px 12px;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  align-self: start;
+  min-height: 0;
 }
 .plate-split-media .plate-svg {
   width: 100%;
@@ -1340,9 +1341,24 @@ a:hover {
 }
 .plate-wedge--interactive {
   cursor: pointer;
+  paint-order: stroke fill;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition:
     opacity 0.18s ease,
-    filter 0.18s ease;
+    filter 0.18s ease,
+    stroke-width 0.15s ease;
+}
+/* Thicker stroke widens pointer/touch hit-testing without changing wedge geometry */
+.plate-svg--rest .plate-wedge--interactive,
+.plate-svg--training .plate-wedge--interactive {
+  stroke-width: 8px;
+  stroke: rgba(255, 255, 255, 0.42);
+}
+.plate-svg--rest .plate-wedge--interactive.is-dim,
+.plate-svg--training .plate-wedge--interactive.is-dim {
+  stroke-width: 6px;
+  stroke: rgba(255, 255, 255, 0.28);
 }
 .plate-wedge--interactive:focus {
   outline: none;

@@ -105,7 +105,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect }: P
       />
       <path
         className={wedgeClass('protein', activeSlot, interactive)}
-        d="M 100 100 L 100 192 A 92 92 0 0 0 8 100 Z"
+        d="M 100 100 L 100 192 A 92 92 0 0 1 8 100 Z"
         fill={`url(#${g('protein')})`}
         stroke="rgba(255,255,255,0.5)"
         strokeWidth="1.25"
