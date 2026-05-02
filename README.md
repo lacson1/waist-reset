@@ -1,73 +1,44 @@
-# React + TypeScript + Vite
+# The Waist Reset
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+African–Mediterranean waist and metabolic protocol companion: React 19, Vite 8, Chart.js, Zustand (local progress), PWA-ready. Routes use **HashRouter** (`#/…`), so static hosting works without server rewrites.
 
-Currently, two official plugins are available:
+## Scripts
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Command        | Description                          |
+| -------------- | ------------------------------------ |
+| `npm run dev`  | Dev server (Vite)                    |
+| `npm run build`| Typecheck + production build → `dist` |
+| `npm run preview` | Serve `dist` locally              |
+| `npm run lint` | ESLint                               |
+| `npm run test:e2e` | Playwright (starts dev server)   |
 
-## React Compiler
+Install uses **`legacy-peer-deps`** (see `.npmrc`) because `vite-plugin-pwa` peer range does not yet include Vite 8.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Push to GitHub
 
-## Expanding the ESLint configuration
+From this directory (repo root):
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Create an **empty** repository on GitHub (no README, no `.gitignore`), e.g. `waist-reset`.
+2. Authenticate: `gh auth login` **or** use a [personal access token](https://github.com/settings/tokens) with `repo` scope.
+3. Add remote and push (replace `YOUR_USER` and repo name if different):
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git remote add origin https://github.com/YOUR_USER/waist-reset.git
+git branch -M main
+git push -u origin main
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If `origin` already exists, use `git remote set-url origin https://github.com/...`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Deploy on Vercel
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. [vercel.com](https://vercel.com) → **Add New…** → **Project** → Import the GitHub repo.
+2. Vercel detects **Vite**: leave defaults (**Build**: `npm run build`, **Output**: `dist`). The repo’s `.npmrc` ensures `npm install` succeeds.
+3. Deploy. Open the production URL; use `https://YOUR-APP.vercel.app/#/start` (hash path) for deep links.
+
+CLI alternative (after `npx vercel login`):
+
+```bash
+npx vercel link
+npx vercel --prod
 ```
