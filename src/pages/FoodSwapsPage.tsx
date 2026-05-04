@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FOOD_SWAP_CATEGORIES,
@@ -8,6 +9,9 @@ import {
   type FoodSwapRow,
   type SwapImpact,
 } from '../data/foodSwapsContent'
+import { swapId, topSwapId, useSwapsStore } from '../store/swapsStore'
+
+const ALL_IMPACTS: SwapImpact[] = ['High', 'Medium', 'Low']
 
 function ImpactBadge({ impact }: { impact: SwapImpact }) {
   const filled = impact === 'High' ? 3 : impact === 'Medium' ? 2 : 1
@@ -129,11 +133,60 @@ function CategoryGlyph({ id }: { id: string }) {
   }
 }
 
-function SwapRowCard({ row, accent }: { row: FoodSwapRow; accent: FoodSwapAccent }) {
+function AdoptedToggle({ id, label }: { id: string; label?: string }) {
+  const adopted = useSwapsStore((s) => s.adopted.includes(id))
+  const toggle = useSwapsStore((s) => s.toggleAdopted)
+  return (
+    <button
+      type="button"
+      className={`food-swaps-adopted${adopted ? ' food-swaps-adopted--on' : ''}`}
+      aria-pressed={adopted}
+      onClick={() => toggle(id)}
+      title={adopted ? 'Marked as adopted — click to remove' : 'Mark as adopted'}
+    >
+      <span className="food-swaps-adopted__check" aria-hidden>
+        {adopted ? '✓' : ''}
+      </span>
+      {label ?? (adopted ? 'Adopted' : 'Mark adopted')}
+    </button>
+  )
+}
+
+function AddToShoppingButton({ item }: { item: string }) {
+  const inList = useSwapsStore((s) => s.shoppingExtras.includes(item))
+  const add = useSwapsStore((s) => s.addToShopping)
+  const remove = useSwapsStore((s) => s.removeFromShopping)
+  return (
+    <button
+      type="button"
+      className={`food-swaps-shop-add${inList ? ' food-swaps-shop-add--on' : ''}`}
+      aria-pressed={inList}
+      onClick={() => (inList ? remove(item) : add(item))}
+      title={inList ? 'Remove from shopping list' : 'Add to shopping list'}
+    >
+      {inList ? '✓ In shopping' : '+ Shopping'}
+    </button>
+  )
+}
+
+function SwapRowCard({
+  row,
+  accent,
+  categoryId,
+}: {
+  row: FoodSwapRow
+  accent: FoodSwapAccent
+  categoryId: string
+}) {
+  const id = swapId(categoryId, row.instead)
   return (
     <article className={`food-swaps-swap-card food-swaps-swap-card--accent-${accent}`}>
-      <div className="food-swaps-swap-card__impact">
+      <div className="food-swaps-swap-card__head">
         <ImpactBadge impact={row.impact} />
+        <div className="food-swaps-swap-card__actions">
+          <AddToShoppingButton item={row.try} />
+          <AdoptedToggle id={id} />
+        </div>
       </div>
       <div className="food-swaps-swap-card__pair">
         <div className="food-swaps-swap-col">
@@ -169,7 +222,71 @@ function scrollToId(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function rowMatches(row: FoodSwapRow, q: string) {
+  if (!q) return true
+  const hay = `${row.instead}\n${row.try}\n${row.why}`.toLowerCase()
+  return hay.includes(q)
+}
+
+function topMatches(title: string, body: string, q: string) {
+  if (!q) return true
+  return `${title}\n${body}`.toLowerCase().includes(q)
+}
+
 export function FoodSwapsPage() {
+  const [query, setQuery] = useState('')
+  const [activeImpacts, setActiveImpacts] = useState<Set<SwapImpact>>(new Set())
+  const [activeCats, setActiveCats] = useState<Set<string>>(new Set())
+  const adoptedCount = useSwapsStore((s) => s.adopted.length)
+  const extrasCount = useSwapsStore((s) => s.shoppingExtras.length)
+
+  const q = query.trim().toLowerCase()
+  const impactsOn = activeImpacts.size > 0
+  const catsOn = activeCats.size > 0
+
+  const filteredCategories = useMemo(() => {
+    return FOOD_SWAP_CATEGORIES.map((cat) => {
+      if (catsOn && !activeCats.has(cat.id)) return { ...cat, rows: [] as FoodSwapRow[] }
+      const rows = cat.rows.filter(
+        (r) => (!impactsOn || activeImpacts.has(r.impact)) && rowMatches(r, q),
+      )
+      return { ...cat, rows }
+    })
+  }, [activeCats, activeImpacts, catsOn, impactsOn, q])
+
+  const visibleCategoryCount = filteredCategories.filter((c) => c.rows.length > 0).length
+  const totalRowCount = filteredCategories.reduce((n, c) => n + c.rows.length, 0)
+
+  const filteredTopTen = useMemo(
+    () => TOP_TEN_SWAPS.filter((t) => topMatches(t.title, t.body, q)),
+    [q],
+  )
+
+  const showTopTen = !catsOn && !impactsOn && filteredTopTen.length > 0
+
+  function toggleImpact(i: SwapImpact) {
+    setActiveImpacts((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
+  function toggleCat(id: string) {
+    setActiveCats((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  function clearFilters() {
+    setQuery('')
+    setActiveImpacts(new Set())
+    setActiveCats(new Set())
+  }
+  const filtersActive = !!q || impactsOn || catsOn
+
   return (
     <section className="view active food-swaps-page">
       <div className="food-swaps-hero">
@@ -189,75 +306,173 @@ export function FoodSwapsPage() {
               <span className="food-swaps-meta-hint">
                 Plate templates: <Link to="/plate">Plate system</Link>
               </span>
+              <span className="food-swaps-meta-hint">
+                {adoptedCount > 0 ? `${adoptedCount} adopted` : 'No swaps adopted yet'}
+                {' · '}
+                <Link to="/shopping">Shopping list</Link>
+                {extrasCount > 0 ? ` (+${extrasCount})` : ''}
+              </span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="card food-swaps-filters" aria-label="Filter swaps">
+        <div className="food-swaps-filters__row">
+          <label className="food-swaps-search">
+            <span className="food-swaps-search__icon" aria-hidden>
+              <svg viewBox="0 0 20 20" width="16" height="16">
+                <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" strokeWidth="1.75" />
+                <path d="M14 14l4 4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search swaps (e.g. rice, sugar, breakfast)"
+              aria-label="Search swaps"
+            />
+          </label>
+          <div className="food-swaps-filter-group" role="group" aria-label="Impact">
+            <span className="food-swaps-filter-label">Impact</span>
+            {ALL_IMPACTS.map((i) => {
+              const on = activeImpacts.has(i)
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={`food-swaps-filter-chip food-swaps-filter-chip--impact-${i.toLowerCase()}${on ? ' food-swaps-filter-chip--on' : ''}`}
+                  aria-pressed={on}
+                  onClick={() => toggleImpact(i)}
+                >
+                  {i}
+                </button>
+              )
+            })}
+          </div>
+          {filtersActive && (
+            <button type="button" className="food-swaps-filter-clear" onClick={clearFilters}>
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="food-swaps-filter-group food-swaps-filter-group--cats" role="group" aria-label="Category">
+          <span className="food-swaps-filter-label">Category</span>
+          {FOOD_SWAP_CATEGORIES.map((c) => {
+            const on = activeCats.has(c.id)
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`food-swaps-filter-chip food-swaps-filter-chip--cat food-swaps-filter-chip--accent-${c.accent}${on ? ' food-swaps-filter-chip--on' : ''}`}
+                aria-pressed={on}
+                onClick={() => toggleCat(c.id)}
+              >
+                {c.title.replace(' (extended)', '')}
+              </button>
+            )
+          })}
+        </div>
+        <div className="food-swaps-filter-summary" aria-live="polite">
+          {filtersActive
+            ? `Showing ${totalRowCount} swap${totalRowCount === 1 ? '' : 's'} across ${visibleCategoryCount} categor${
+                visibleCategoryCount === 1 ? 'y' : 'ies'
+              }${q ? ` matching “${query.trim()}”` : ''}.`
+            : 'All swaps shown. Use search or chips to narrow down.'}
         </div>
       </div>
 
       <nav className="food-swaps-toc card" aria-label="On this page">
         <span className="food-swaps-toc-label">Jump to</span>
         <div className="food-swaps-toc-buttons">
-          <button type="button" className="food-swaps-toc-btn" onClick={() => scrollToId('section-top-ten')}>
-            Top 10
-          </button>
-          {FOOD_SWAP_CATEGORIES.map((c) => (
-            <button key={c.id} type="button" className="food-swaps-toc-btn" onClick={() => scrollToId(`cat-${c.id}`)}>
-              {c.title.replace(' (extended)', '')}
+          {showTopTen && (
+            <button type="button" className="food-swaps-toc-btn" onClick={() => scrollToId('section-top-ten')}>
+              Top 10
             </button>
-          ))}
+          )}
+          {filteredCategories
+            .filter((c) => c.rows.length > 0)
+            .map((c) => (
+              <button key={c.id} type="button" className="food-swaps-toc-btn" onClick={() => scrollToId(`cat-${c.id}`)}>
+                {c.title.replace(' (extended)', '')}
+              </button>
+            ))}
           <button type="button" className="food-swaps-toc-btn" onClick={() => scrollToId('section-why')}>
             Why swaps
           </button>
         </div>
       </nav>
 
-      <div className="card food-swaps-top-ten" id="section-top-ten">
-        <div className="food-swaps-section-head">
-          <span className="food-swaps-section-kicker">Priority</span>
-          <h2 className="section-h section-h--flush">If you do nothing else</h2>
-        </div>
-        <p className="food-swaps-section-lead">
-          <strong>Top 10 highest-impact swaps</strong> — These ten changes account for most of the visceral-fat reduction in
-          the first 8 weeks. Stack them progressively — don&apos;t try them all in week one.
-        </p>
-        <ol className="food-swaps-top-list">
-          {TOP_TEN_SWAPS.map((s) => (
-            <li key={s.rank} className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}`}>
-              <div className="food-swaps-top-rank" aria-hidden>
-                <span className="food-swaps-top-rank__circle">{s.rank}</span>
-                {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
-              </div>
-              <div className="food-swaps-top-content">
-                <SwapArrowTitle title={s.title} />
-                <p className="food-swaps-top-body">{s.body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {FOOD_SWAP_CATEGORIES.map((cat) => (
-        <div
-          key={cat.id}
-          className={`card food-swaps-category-card food-swaps-category-card--accent-${cat.accent}`}
-          id={`cat-${cat.id}`}
-        >
-          <header className="food-swaps-cat-head">
-            <div className="food-swaps-cat-head__icon">
-              <CategoryGlyph id={cat.id} />
-            </div>
-            <div className="food-swaps-cat-head__text">
-              <h2 className="section-h section-h--flush">{cat.title}</h2>
-              {cat.lead && <p className="food-swaps-cat-lead">{cat.lead}</p>}
-            </div>
-          </header>
-          <div className="food-swaps-row-cards">
-            {cat.rows.map((row) => (
-              <SwapRowCard key={`${cat.id}-${row.instead}`} row={row} accent={cat.accent} />
-            ))}
+      {showTopTen && (
+        <div className="card food-swaps-top-ten" id="section-top-ten">
+          <div className="food-swaps-section-head">
+            <span className="food-swaps-section-kicker">Priority</span>
+            <h2 className="section-h section-h--flush">If you do nothing else</h2>
           </div>
+          <p className="food-swaps-section-lead">
+            <strong>Top 10 highest-impact swaps</strong> — These ten changes account for most of the visceral-fat
+            reduction in the first 8 weeks. Stack them progressively — don&apos;t try them all in week one.
+          </p>
+          <ol className="food-swaps-top-list">
+            {filteredTopTen.map((s) => (
+              <li key={s.rank} className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}`}>
+                <div className="food-swaps-top-rank" aria-hidden>
+                  <span className="food-swaps-top-rank__circle">{s.rank}</span>
+                  {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
+                </div>
+                <div className="food-swaps-top-content">
+                  <SwapArrowTitle title={s.title} />
+                  <p className="food-swaps-top-body">{s.body}</p>
+                  <div className="food-swaps-top-actions">
+                    <AdoptedToggle id={topSwapId(s.rank)} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
-      ))}
+      )}
+
+      {filteredCategories.map((cat) =>
+        cat.rows.length === 0 ? null : (
+          <div
+            key={cat.id}
+            className={`card food-swaps-category-card food-swaps-category-card--accent-${cat.accent}`}
+            id={`cat-${cat.id}`}
+          >
+            <header className="food-swaps-cat-head">
+              <div className="food-swaps-cat-head__icon">
+                <CategoryGlyph id={cat.id} />
+              </div>
+              <div className="food-swaps-cat-head__text">
+                <h2 className="section-h section-h--flush">{cat.title}</h2>
+                {cat.lead && <p className="food-swaps-cat-lead">{cat.lead}</p>}
+              </div>
+            </header>
+            <div className="food-swaps-row-cards">
+              {cat.rows.map((row) => (
+                <SwapRowCard
+                  key={`${cat.id}-${row.instead}`}
+                  row={row}
+                  accent={cat.accent}
+                  categoryId={cat.id}
+                />
+              ))}
+            </div>
+          </div>
+        ),
+      )}
+
+      {filtersActive && totalRowCount === 0 && !showTopTen && (
+        <div className="card food-swaps-empty">
+          <h2 className="section-h section-h--flush">No swaps match those filters</h2>
+          <p>Try a different search term, broaden the impact selection, or clear the category chips.</p>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={clearFilters}>
+            Clear all filters
+          </button>
+        </div>
+      )}
 
       <div className="card food-swaps-why" id="section-why">
         <div className="food-swaps-section-head">

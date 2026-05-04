@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { SHOPPING, TIER_DESCS, type ShopTier } from '../data/shoppingEatout'
+import { useSwapsStore } from '../store/swapsStore'
 
 const TIERS: ShopTier[] = ['budget', 'standard', 'premium']
 
 export function ShoppingPage() {
   const [tier, setTier] = useState<ShopTier>('standard')
+  const extras = useSwapsStore((s) => s.shoppingExtras)
+  const removeFromShopping = useSwapsStore((s) => s.removeFromShopping)
+  const clearShoppingExtras = useSwapsStore((s) => s.clearShoppingExtras)
 
   return (
     <section className="view active">
@@ -23,6 +28,37 @@ export function ShoppingPage() {
           </button>
         ))}
       </div>
+
+      {extras.length > 0 && (
+        <div className="card shop-extras-card">
+          <div className="shop-extras-head">
+            <div>
+              <h3 className="shop-extras-title">From swaps</h3>
+              <p className="shop-extras-sub">
+                Items you sent here from <Link to="/swaps">Food swaps</Link>. They live alongside the tier list below.
+              </p>
+            </div>
+            <button type="button" className="shop-extras-clear" onClick={clearShoppingExtras}>
+              Clear
+            </button>
+          </div>
+          <ul className="shop-extras-list">
+            {extras.map((item) => (
+              <li key={item}>
+                <span className="shop-extras-item">{item}</span>
+                <button
+                  type="button"
+                  className="shop-extras-remove"
+                  aria-label={`Remove ${item} from shopping list`}
+                  onClick={() => removeFromShopping(item)}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="shop-grid">
         {Object.entries(SHOPPING).map(([cat, byTier]) => (
