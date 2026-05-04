@@ -2703,35 +2703,51 @@ a:hover {
   }
 }
 
-/* ---- Food swaps: filter bar ---- */
+/* ---- Food swaps: hero meta link ---- */
+.food-swaps-meta-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal-deep);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(31, 61, 46, 0.25);
+  padding-bottom: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.food-swaps-meta-link:hover {
+  color: var(--teal);
+  border-color: var(--teal);
+}
+
+/* ---- Food swaps: filter card ---- */
 .food-swaps-filters {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   margin-bottom: 16px;
+  padding: 16px 18px;
 }
-.food-swaps-filters__row {
+.food-swaps-filters__top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
 }
 .food-swaps-search {
   position: relative;
   display: inline-flex;
   align-items: center;
-  flex: 1 1 240px;
-  min-width: 220px;
-  background: var(--bg-card);
+  flex: 1 1 280px;
+  min-width: 240px;
+  background: #fff;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0 10px;
-  height: 38px;
+  padding: 0 12px;
+  height: 40px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .food-swaps-search:focus-within {
   border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 61, 46, 0.12);
+  box-shadow: 0 0 0 3px rgba(31, 61, 46, 0.1);
 }
 .food-swaps-search__icon {
   display: inline-flex;
@@ -2747,9 +2763,79 @@ a:hover {
   font-size: 14px;
   color: var(--text-primary);
   padding: 0;
+  min-width: 0;
 }
 .food-swaps-search input::placeholder {
   color: var(--text-tertiary);
+}
+.food-swaps-search input::-webkit-search-cancel-button {
+  appearance: none;
+}
+.food-swaps-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-subtle, #f5f1e8);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  height: 40px;
+}
+.food-swaps-stat {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  min-width: 70px;
+  height: 100%;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+}
+.food-swaps-stat__num {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--teal-deep);
+  line-height: 1;
+}
+.food-swaps-stat__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-top: 3px;
+}
+.food-swaps-stat--link {
+  cursor: pointer;
+}
+.food-swaps-stat--link:hover {
+  background: #fff;
+}
+.food-swaps-stat--link:hover .food-swaps-stat__num {
+  color: var(--teal);
+}
+.food-swaps-stat--link:hover .food-swaps-stat__label {
+  color: var(--teal-deep);
+}
+
+.food-swaps-filters__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 6px 0 2px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.food-swaps-filter-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
 }
 .food-swaps-filter-group {
   display: inline-flex;
@@ -2757,13 +2843,10 @@ a:hover {
   align-items: center;
   gap: 6px;
 }
-.food-swaps-filter-group--cats {
-  width: 100%;
-}
 .food-swaps-filter-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-tertiary);
   margin-right: 4px;
@@ -2772,13 +2855,13 @@ a:hover {
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  padding: 6px 11px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--bg-card);
+  background: #fff;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .food-swaps-filter-chip:hover {
   border-color: var(--border-strong);
@@ -2788,7 +2871,6 @@ a:hover {
   background: var(--teal-tint);
   border-color: var(--teal);
   color: var(--teal-deep);
-  box-shadow: 0 1px 2px rgba(31, 61, 46, 0.08);
 }
 .food-swaps-filter-chip--impact-high.food-swaps-filter-chip--on {
   background: var(--clay-soft);
@@ -2835,26 +2917,33 @@ a:hover {
   border-color: var(--lacbis-navy);
   color: var(--lacbis-navy);
 }
+
+.food-swaps-filters__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.food-swaps-filter-summary {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
 .food-swaps-filter-clear {
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid var(--border-strong);
-  background: #fff;
-  color: var(--text-secondary);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--clay);
   cursor: pointer;
-  margin-left: auto;
 }
 .food-swaps-filter-clear:hover {
-  color: var(--clay);
-  border-color: var(--clay);
-}
-.food-swaps-filter-summary {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-weight: 500;
+  background: var(--clay-soft);
+  border-color: rgba(184, 80, 46, 0.25);
 }
 
 /* ---- Food swaps: card head with actions ---- */
@@ -2863,8 +2952,8 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px 12px;
+  margin-bottom: 12px;
 }
 .food-swaps-swap-card__actions {
   display: inline-flex;
@@ -2872,17 +2961,23 @@ a:hover {
   align-items: center;
   gap: 6px;
 }
-.food-swaps-top-actions {
-  margin-top: 8px;
+
+/* ---- Food swaps: adopted state on cards ---- */
+.food-swaps-swap-card--adopted {
+  background: linear-gradient(180deg, var(--sage-soft) 0%, #fff 90%);
+}
+.food-swaps-top-item--adopted {
+  background: linear-gradient(180deg, var(--sage-soft) 0%, #fff 70%);
+  border-color: rgba(90, 122, 98, 0.35);
 }
 
-/* ---- Food swaps: adopted toggle ---- */
+/* ---- Food swaps: adopted toggle (checkbox-style) ---- */
 .food-swaps-adopted {
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 5px 10px 5px 8px;
+  letter-spacing: 0.03em;
+  padding: 4px 10px 4px 5px;
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: #fff;
@@ -2897,27 +2992,33 @@ a:hover {
   border-color: var(--sage);
   color: var(--sage);
 }
-.food-swaps-adopted__check {
-  width: 14px;
-  height: 14px;
+.food-swaps-adopted__box {
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
-  border: 1.5px solid currentColor;
+  background: #fff;
+  border: 1.5px solid var(--border-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: 800;
+  color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.food-swaps-adopted__label {
   line-height: 1;
+}
+.food-swaps-adopted:hover .food-swaps-adopted__box {
+  border-color: var(--sage);
 }
 .food-swaps-adopted--on {
   background: var(--sage-soft);
   border-color: var(--sage);
   color: var(--sage);
 }
-.food-swaps-adopted--on .food-swaps-adopted__check {
+.food-swaps-adopted--on .food-swaps-adopted__box {
   background: var(--sage);
-  color: #fff;
   border-color: var(--sage);
+  color: #fff;
 }
 
 /* ---- Food swaps: add-to-shopping button ---- */
@@ -2925,22 +3026,46 @@ a:hover {
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 5px 10px;
+  letter-spacing: 0.03em;
+  padding: 4px 10px 4px 8px;
   border-radius: 999px;
-  border: 1px solid var(--gold);
+  border: 1px solid var(--border-strong);
   background: #fff;
-  color: #7a5c12;
+  color: var(--text-secondary);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
+.food-swaps-shop-add svg {
+  display: block;
+  color: var(--gold);
+}
 .food-swaps-shop-add:hover {
-  background: var(--gold-tint);
+  border-color: var(--gold);
+  color: #7a5c12;
 }
 .food-swaps-shop-add--on {
   background: var(--gold-soft);
   border-color: var(--gold);
   color: #5e4309;
+}
+.food-swaps-shop-add--on svg {
+  color: #7a5c12;
+}
+
+/* ---- Food swaps: Top 10 inline title row ---- */
+.food-swaps-top-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+.food-swaps-top-row .food-swaps-arrow-title {
+  margin-bottom: 0;
 }
 
 /* ---- Food swaps: empty state ---- */

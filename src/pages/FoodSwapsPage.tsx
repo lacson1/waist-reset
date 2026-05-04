@@ -133,7 +133,7 @@ function CategoryGlyph({ id }: { id: string }) {
   }
 }
 
-function AdoptedToggle({ id, label }: { id: string; label?: string }) {
+function AdoptedToggle({ id }: { id: string }) {
   const adopted = useSwapsStore((s) => s.adopted.includes(id))
   const toggle = useSwapsStore((s) => s.toggleAdopted)
   return (
@@ -142,12 +142,21 @@ function AdoptedToggle({ id, label }: { id: string; label?: string }) {
       className={`food-swaps-adopted${adopted ? ' food-swaps-adopted--on' : ''}`}
       aria-pressed={adopted}
       onClick={() => toggle(id)}
-      title={adopted ? 'Marked as adopted — click to remove' : 'Mark as adopted'}
+      title={adopted ? 'Adopted — click to undo' : 'Mark as adopted'}
     >
-      <span className="food-swaps-adopted__check" aria-hidden>
-        {adopted ? '✓' : ''}
+      <span className="food-swaps-adopted__box" aria-hidden>
+        <svg viewBox="0 0 12 12" width="10" height="10">
+          <path
+            d="M2 6.4l2.6 2.6L10 3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </span>
-      {label ?? (adopted ? 'Adopted' : 'Mark adopted')}
+      <span className="food-swaps-adopted__label">{adopted ? 'Adopted' : 'Adopt'}</span>
     </button>
   )
 }
@@ -162,10 +171,46 @@ function AddToShoppingButton({ item }: { item: string }) {
       className={`food-swaps-shop-add${inList ? ' food-swaps-shop-add--on' : ''}`}
       aria-pressed={inList}
       onClick={() => (inList ? remove(item) : add(item))}
-      title={inList ? 'Remove from shopping list' : 'Add to shopping list'}
+      title={inList ? 'Added to shopping list — click to remove' : 'Add to shopping list'}
     >
-      {inList ? '✓ In shopping' : '+ Shopping'}
+      <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden>
+        <path
+          d="M2 3h2l1.5 8h7L14 5H5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="6.5" cy="13.5" r="1" fill="currentColor" />
+        <circle cx="11.5" cy="13.5" r="1" fill="currentColor" />
+      </svg>
+      <span>{inList ? 'In list' : 'Add'}</span>
     </button>
+  )
+}
+
+function TopSwapItem({ s }: { s: (typeof TOP_TEN_SWAPS)[number] }) {
+  const id = topSwapId(s.rank)
+  const adopted = useSwapsStore((st) => st.adopted.includes(id))
+  return (
+    <li
+      className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}${
+        adopted ? ' food-swaps-top-item--adopted' : ''
+      }`}
+    >
+      <div className="food-swaps-top-rank" aria-hidden>
+        <span className="food-swaps-top-rank__circle">{s.rank}</span>
+        {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
+      </div>
+      <div className="food-swaps-top-content">
+        <div className="food-swaps-top-row">
+          <SwapArrowTitle title={s.title} />
+          <AdoptedToggle id={id} />
+        </div>
+        <p className="food-swaps-top-body">{s.body}</p>
+      </div>
+    </li>
   )
 }
 
@@ -179,8 +224,13 @@ function SwapRowCard({
   categoryId: string
 }) {
   const id = swapId(categoryId, row.instead)
+  const adopted = useSwapsStore((s) => s.adopted.includes(id))
   return (
-    <article className={`food-swaps-swap-card food-swaps-swap-card--accent-${accent}`}>
+    <article
+      className={`food-swaps-swap-card food-swaps-swap-card--accent-${accent}${
+        adopted ? ' food-swaps-swap-card--adopted' : ''
+      }`}
+    >
       <div className="food-swaps-swap-card__head">
         <ImpactBadge impact={row.impact} />
         <div className="food-swaps-swap-card__actions">
@@ -303,22 +353,16 @@ export function FoodSwapsPage() {
                   {c}
                 </span>
               ))}
-              <span className="food-swaps-meta-hint">
-                Plate templates: <Link to="/plate">Plate system</Link>
-              </span>
-              <span className="food-swaps-meta-hint">
-                {adoptedCount > 0 ? `${adoptedCount} adopted` : 'No swaps adopted yet'}
-                {' · '}
-                <Link to="/shopping">Shopping list</Link>
-                {extrasCount > 0 ? ` (+${extrasCount})` : ''}
-              </span>
+              <Link to="/plate" className="food-swaps-meta-link">
+                Plate templates →
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
       <div className="card food-swaps-filters" aria-label="Filter swaps">
-        <div className="food-swaps-filters__row">
+        <div className="food-swaps-filters__top">
           <label className="food-swaps-search">
             <span className="food-swaps-search__icon" aria-hidden>
               <svg viewBox="0 0 20 20" width="16" height="16">
@@ -334,6 +378,18 @@ export function FoodSwapsPage() {
               aria-label="Search swaps"
             />
           </label>
+          <div className="food-swaps-stats" aria-label="Your progress">
+            <span className="food-swaps-stat">
+              <span className="food-swaps-stat__num">{adoptedCount}</span>
+              <span className="food-swaps-stat__label">adopted</span>
+            </span>
+            <Link to="/shopping" className="food-swaps-stat food-swaps-stat--link">
+              <span className="food-swaps-stat__num">{extrasCount}</span>
+              <span className="food-swaps-stat__label">in shopping →</span>
+            </Link>
+          </div>
+        </div>
+        <div className="food-swaps-filters__chips">
           <div className="food-swaps-filter-group" role="group" aria-label="Impact">
             <span className="food-swaps-filter-label">Impact</span>
             {ALL_IMPACTS.map((i) => {
@@ -351,35 +407,38 @@ export function FoodSwapsPage() {
               )
             })}
           </div>
+          <div className="food-swaps-filter-divider" aria-hidden />
+          <div className="food-swaps-filter-group food-swaps-filter-group--cats" role="group" aria-label="Category">
+            <span className="food-swaps-filter-label">Category</span>
+            {FOOD_SWAP_CATEGORIES.map((c) => {
+              const on = activeCats.has(c.id)
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`food-swaps-filter-chip food-swaps-filter-chip--cat food-swaps-filter-chip--accent-${c.accent}${on ? ' food-swaps-filter-chip--on' : ''}`}
+                  aria-pressed={on}
+                  onClick={() => toggleCat(c.id)}
+                >
+                  {c.title.replace(' (extended)', '')}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <div className="food-swaps-filters__foot">
+          <span className="food-swaps-filter-summary" aria-live="polite">
+            {filtersActive
+              ? `Showing ${totalRowCount} swap${totalRowCount === 1 ? '' : 's'} across ${visibleCategoryCount} categor${
+                  visibleCategoryCount === 1 ? 'y' : 'ies'
+                }${q ? ` matching “${query.trim()}”` : ''}.`
+              : 'All swaps shown. Use search or the chips to narrow down.'}
+          </span>
           {filtersActive && (
             <button type="button" className="food-swaps-filter-clear" onClick={clearFilters}>
-              Clear
+              Clear filters
             </button>
           )}
-        </div>
-        <div className="food-swaps-filter-group food-swaps-filter-group--cats" role="group" aria-label="Category">
-          <span className="food-swaps-filter-label">Category</span>
-          {FOOD_SWAP_CATEGORIES.map((c) => {
-            const on = activeCats.has(c.id)
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className={`food-swaps-filter-chip food-swaps-filter-chip--cat food-swaps-filter-chip--accent-${c.accent}${on ? ' food-swaps-filter-chip--on' : ''}`}
-                aria-pressed={on}
-                onClick={() => toggleCat(c.id)}
-              >
-                {c.title.replace(' (extended)', '')}
-              </button>
-            )
-          })}
-        </div>
-        <div className="food-swaps-filter-summary" aria-live="polite">
-          {filtersActive
-            ? `Showing ${totalRowCount} swap${totalRowCount === 1 ? '' : 's'} across ${visibleCategoryCount} categor${
-                visibleCategoryCount === 1 ? 'y' : 'ies'
-              }${q ? ` matching “${query.trim()}”` : ''}.`
-            : 'All swaps shown. Use search or chips to narrow down.'}
         </div>
       </div>
 
@@ -416,19 +475,7 @@ export function FoodSwapsPage() {
           </p>
           <ol className="food-swaps-top-list">
             {filteredTopTen.map((s) => (
-              <li key={s.rank} className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}`}>
-                <div className="food-swaps-top-rank" aria-hidden>
-                  <span className="food-swaps-top-rank__circle">{s.rank}</span>
-                  {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
-                </div>
-                <div className="food-swaps-top-content">
-                  <SwapArrowTitle title={s.title} />
-                  <p className="food-swaps-top-body">{s.body}</p>
-                  <div className="food-swaps-top-actions">
-                    <AdoptedToggle id={topSwapId(s.rank)} />
-                  </div>
-                </div>
-              </li>
+              <TopSwapItem key={s.rank} s={s} />
             ))}
           </ol>
         </div>
