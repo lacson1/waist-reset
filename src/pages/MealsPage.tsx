@@ -38,6 +38,9 @@ export function MealsPage() {
               <Link to="/foods">Food database</Link> — macros and prep notes.
             </li>
             <li>
+              <Link to="/synergies">Synergies</Link> — pairs and triples where mechanisms stack.
+            </li>
+            <li>
               <Link to="/daily">Daily plan</Link> — clock-shaped example day.
             </li>
           </ul>

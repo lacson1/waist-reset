@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { SYNERGIES } from '../data/rulesMarkers'
 
 export function SynergiesPage() {
@@ -8,7 +9,10 @@ export function SynergiesPage() {
           <div className="eyebrow">Combinations</div>
           <h1>Synergies</h1>
           <div className="topbar-sub">
-            Pairs and triples where mechanisms stack — useful when building plates and shopping lists.
+            Pairs and triples where mechanisms stack — useful when building <Link to="/plate">plates</Link>,{' '}
+            <Link to="/meals">meals</Link>, and <Link to="/shopping">shopping lists</Link>. Individual ingredients live
+            in the <Link to="/foods">food database</Link>; mechanism-led one-for-ones are on{' '}
+            <Link to="/swaps">food swaps</Link>.
           </div>
         </div>
       </div>
