@@ -105,6 +105,7 @@ export function PlateMealBuilder({
     string | null
   >(null);
   const [savedMealBanner, setSavedMealBanner] = useState<string | null>(null);
+  const [addedLineBanner, setAddedLineBanner] = useState<string | null>(null);
   const [showCollapsibleHint, setShowCollapsibleHint] = useState(
     () => !readHintDismissed(),
   );
@@ -120,6 +121,12 @@ export function PlateMealBuilder({
     const t = window.setTimeout(() => setSavedMealBanner(null), 5200);
     return () => window.clearTimeout(t);
   }, [savedMealBanner]);
+
+  useEffect(() => {
+    if (!addedLineBanner) return;
+    const t = window.setTimeout(() => setAddedLineBanner(null), 2800);
+    return () => window.clearTimeout(t);
+  }, [addedLineBanner]);
 
   const handleSaveToToday = useCallback(() => {
     if (items.length === 0) return;
@@ -200,6 +207,26 @@ export function PlateMealBuilder({
     [template, activeSlot],
   );
 
+  const handleAddFoodLine = useCallback(
+    (slot: MealSlot, food: Parameters<typeof addFoodItem>[1], portion?: number) => {
+      addFoodItem(slot, food, portion);
+      setAddedLineBanner(`Added ${food.n} to ${slotLabel(template, slot)}.`);
+    },
+    [addFoodItem, template],
+  );
+
+  const handleAddCustomLine = useCallback(
+    (
+      slot: MealSlot,
+      custom: { label: string; kcal: number; p: number; f: number; c: number },
+      portion?: number,
+    ) => {
+      addCustomItem(slot, custom, portion);
+      setAddedLineBanner(`Added ${custom.label} to ${slotLabel(template, slot)}.`);
+    },
+    [addCustomItem, template],
+  );
+
   return (
     <div className="card plate-meal-builder" data-testid="plate-meal-builder">
       <PlateMealBuilderIntro
@@ -207,6 +234,7 @@ export function PlateMealBuilder({
         onDismissHint={dismissCollapsibleHint}
         templateSwitchBanner={templateSwitchBanner}
         savedMealBanner={savedMealBanner}
+        addedLineBanner={addedLineBanner}
       />
 
       <PlateTemplatePicker template={template} onPick={handleTemplatePick} />
@@ -238,8 +266,8 @@ export function PlateMealBuilder({
           foodsLoading={foodsLoading}
           foodsErr={foodsErr}
           reloadFoods={reloadFoods}
-          onAddFood={addFoodItem}
-          onAddCustom={addCustomItem}
+          onAddFood={handleAddFoodLine}
+          onAddCustom={handleAddCustomLine}
         />
 
         <PlateMealLines
@@ -251,6 +279,7 @@ export function PlateMealBuilder({
           onClear={clearItems}
           onResetAll={openResetDialog}
           onSaveToToday={handleSaveToToday}
+          onJumpToSlot={setActiveSlot}
         />
 
         <PlateMealTotals

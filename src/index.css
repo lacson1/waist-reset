@@ -2011,6 +2011,14 @@ a:hover {
     letter-spacing: 0.02em;
 }
 
+.plate-svg-pick.plate-svg-pick--imprint.plate-svg-pick--overflow {
+    fill: rgba(24, 40, 44, 0.82);
+    stroke: rgba(255, 255, 255, 0.52);
+    stroke-width: 0.62px;
+    font-weight: 650;
+    letter-spacing: 0.03em;
+}
+
 .plate-svg-pick.plate-svg-pick--bowl.plate-svg-pick--imprint-bowl {
     font-family: var(--font-plate-picks);
     font-size: var(--font-plate-svg-pick-bowl-imprint);
@@ -4856,6 +4864,30 @@ a:hover {
     color: var(--text-primary);
 }
 
+.plate-meal-builder__guide-line-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.plate-meal-builder__guide-count-badge {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(31, 61, 46, 0.14);
+}
+
 .plate-meal-builder__guide-detail {
     font-size: 13px;
     line-height: 1.5;
@@ -6441,6 +6473,33 @@ button.plate-meal-builder__pick-row--select:hover {
     margin-bottom: 10px;
 }
 
+.plate-meal-builder__custom-grid .field>span {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+}
+
+.plate-meal-builder__custom-grid .field input {
+    color: var(--text-primary);
+    background: #fff;
+    border: 1px solid rgba(31, 61, 46, 0.24);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.plate-meal-builder__custom-grid .field input::placeholder {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.plate-meal-builder__custom-grid .field input:focus-visible {
+    border-color: rgba(31, 61, 46, 0.48);
+    box-shadow: 0 0 0 3px rgba(31, 61, 46, 0.12);
+}
+
 @media (max-width: 520px) {
     .plate-meal-builder__custom-grid {
         grid-template-columns: 1fr;
@@ -6535,6 +6594,12 @@ button.plate-meal-builder__pick-row--select:hover {
     border-color: rgba(26, 138, 90, 0.32);
     background: rgba(26, 138, 90, 0.10);
     color: var(--positive);
+}
+
+.plate-meal-builder__notice--added {
+    border-color: rgba(31, 96, 110, 0.28);
+    background: rgba(31, 96, 110, 0.08);
+    color: var(--text-secondary);
 }
 
 .today-meals-card__head {
@@ -6689,6 +6754,109 @@ button.plate-meal-builder__pick-row--select:hover {
     overscroll-behavior: contain;
     padding-right: 2px;
     scrollbar-gutter: stable;
+}
+
+.plate-meal-builder__line-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.plate-meal-builder__line-group {
+    border: 1px solid rgba(31, 61, 46, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.plate-meal-builder__line-group[data-slot='veg'],
+.plate-meal-builder__line-group[data-slot='leafy'] {
+    border-color: color-mix(in srgb, var(--plate-tint-veg) 32%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-veg) 8%, rgba(255, 255, 255, 0.82));
+}
+
+.plate-meal-builder__line-group[data-slot='protein'] {
+    border-color: color-mix(in srgb, var(--plate-tint-protein) 34%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-protein) 8%, rgba(255, 255, 255, 0.82));
+}
+
+.plate-meal-builder__line-group[data-slot='fibre'] {
+    border-color: color-mix(in srgb, var(--plate-tint-fibre) 36%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-fibre) 10%, rgba(255, 255, 255, 0.84));
+}
+
+.plate-meal-builder__line-group[data-slot='carbs'] {
+    border-color: color-mix(in srgb, var(--plate-tint-carbs) 34%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-carbs) 8%, rgba(255, 255, 255, 0.82));
+}
+
+.plate-meal-builder__line-group[data-slot='base'] {
+    border-color: color-mix(in srgb, var(--plate-tint-soup-base) 36%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-soup-base) 10%, rgba(255, 255, 255, 0.84));
+}
+
+.plate-meal-builder__line-group[data-slot='aromatics'] {
+    border-color: color-mix(in srgb, var(--plate-tint-soup-aromatics) 36%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-soup-aromatics) 10%, rgba(255, 255, 255, 0.84));
+}
+
+.plate-meal-builder__line-group[data-slot='optional'] {
+    border-color: color-mix(in srgb, var(--plate-tint-soup-optional) 32%, rgba(31, 61, 46, 0.12));
+    background: color-mix(in srgb, var(--plate-tint-soup-optional) 8%, rgba(255, 255, 255, 0.82));
+}
+
+.plate-meal-builder__line-group-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(31, 61, 46, 0.08);
+    background: rgba(248, 250, 249, 0.96);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.plate-meal-builder__line-group[data-slot='veg'] .plate-meal-builder__line-group-head,
+.plate-meal-builder__line-group[data-slot='leafy'] .plate-meal-builder__line-group-head {
+    background: color-mix(in srgb, var(--plate-tint-veg) 16%, rgba(248, 250, 249, 0.96));
+}
+
+.plate-meal-builder__line-group[data-slot='protein'] .plate-meal-builder__line-group-head {
+    background: color-mix(in srgb, var(--plate-tint-protein) 16%, rgba(248, 250, 249, 0.96));
+}
+
+.plate-meal-builder__line-group[data-slot='fibre'] .plate-meal-builder__line-group-head {
+    background: color-mix(in srgb, var(--plate-tint-fibre) 18%, rgba(248, 250, 249, 0.96));
+}
+
+.plate-meal-builder__line-group[data-slot='carbs'] .plate-meal-builder__line-group-head {
+    background: color-mix(in srgb, var(--plate-tint-carbs) 16%, rgba(248, 250, 249, 0.96));
+}
+
+.plate-meal-builder__line-group-head strong {
+    font-size: 12px;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.plate-meal-builder__line-group-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+    background: #fff;
+    border: 1px solid rgba(31, 61, 46, 0.16);
 }
 
 .plate-meal-builder__line {

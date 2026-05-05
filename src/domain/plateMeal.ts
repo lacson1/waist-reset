@@ -275,7 +275,7 @@ export function mealItemDisplayName(it: MealLineItem): string {
   return it.custom?.label ?? '—'
 }
 
-const MAX_PICKS_PER_SLOT = 3
+const MAX_VISIBLE_PICKS_PER_SLOT = 2
 
 function portionSuffixForPlate(portion: number): string {
   if (!Number.isFinite(portion) || Math.abs(portion - 1) < 0.0001) return ''
@@ -325,7 +325,16 @@ export function slotPickLinesForTemplate(
     bySlot[key].push({ label, type })
   }
   for (const s of slots) {
-    bySlot[s] = bySlot[s].slice(0, MAX_PICKS_PER_SLOT)
+    const picks = bySlot[s]
+    if (picks.length <= MAX_VISIBLE_PICKS_PER_SLOT) {
+      bySlot[s] = picks
+      continue
+    }
+    const hidden = picks.length - MAX_VISIBLE_PICKS_PER_SLOT
+    bySlot[s] = [
+      ...picks.slice(0, MAX_VISIBLE_PICKS_PER_SLOT),
+      { label: `+${hidden} more`, type: null },
+    ]
   }
   return bySlot
 }

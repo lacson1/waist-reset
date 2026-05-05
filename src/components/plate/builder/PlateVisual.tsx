@@ -5,6 +5,7 @@ import {
   type MealTemplate,
   type PlatePickLine,
   slotPickLinesForTemplate,
+  slotsForTemplate,
 } from '../../../domain/plateMeal'
 import {
   PLATE_BUILDER_GUIDE,
@@ -72,6 +73,12 @@ export function PlateVisual({ template, activeSlot, items, onSelectSlot }: Props
   })()
 
   const footer = PLATE_BUILDER_GUIDE_FOOTER[template]
+  const slotCounts = useMemo(() => {
+    const counts: Partial<Record<MealSlot, number>> = {}
+    for (const s of slotsForTemplate(template)) counts[s] = 0
+    for (const it of items) counts[it.slot] = (counts[it.slot] ?? 0) + 1
+    return counts
+  }, [items, template])
 
   return (
     <>
@@ -111,7 +118,12 @@ export function PlateVisual({ template, activeSlot, items, onSelectSlot }: Props
                   }
                   onClick={() => onSelectSlot(row.slot)}
                 >
-                  <strong>{row.title}</strong>
+                  <span className="plate-meal-builder__guide-line-top">
+                    <strong>{row.title}</strong>
+                    <span className="plate-meal-builder__guide-count-badge">
+                      {slotCounts[row.slot] ?? 0}
+                    </span>
+                  </span>
                   <span className="muted plate-meal-builder__guide-detail">
                     {row.detail}
                   </span>

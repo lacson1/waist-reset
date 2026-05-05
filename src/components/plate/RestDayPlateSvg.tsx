@@ -176,8 +176,8 @@ export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect, slotPic
           title="¼ Fibre"
           lines={slotPicks?.fibre}
           titleTransform="translate(5, 6)"
-          picksTransform="translate(4, -8)"
-          picksLeadGap={2}
+          picksTransform="translate(4, -4)"
+          picksLeadGap={6}
         />
       </g>
     </svg>

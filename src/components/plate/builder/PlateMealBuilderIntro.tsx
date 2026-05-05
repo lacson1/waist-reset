@@ -3,6 +3,7 @@ type Props = {
   onDismissHint: () => void
   templateSwitchBanner: string | null
   savedMealBanner: string | null
+  addedLineBanner: string | null
 }
 
 /**
@@ -16,6 +17,7 @@ export function PlateMealBuilderIntro({
   onDismissHint,
   templateSwitchBanner,
   savedMealBanner,
+  addedLineBanner,
 }: Props) {
   return (
     <div className="plate-meal-builder__intro">
@@ -55,6 +57,12 @@ export function PlateMealBuilderIntro({
           data-testid="meal-saved-banner"
         >
           {savedMealBanner}
+        </p>
+      )}
+
+      {addedLineBanner && (
+        <p className="plate-meal-builder__notice plate-meal-builder__notice--added" role="status">
+          {addedLineBanner}
         </p>
       )}
     </div>

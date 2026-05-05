@@ -176,6 +176,7 @@ export function PlateRoundWedgeLabels({
             const wrapped = wrappedBlocks[i]!
             const y = baselines[i]!
             const kind: FoodTypeKind | null = line.type ? foodTypeKind(line.type) : null
+            const isOverflowLine = /^\+\d+\s+more$/i.test(line.label.trim())
             const textX = cx + PICK_ICON_X + PICK_ICON_W + PICK_ICON_GAP
             const iconYOffset =
               wrapped.length > 1 ? ((wrapped.length - 1) * tspanDy) / 2 : 0
@@ -207,7 +208,7 @@ export function PlateRoundWedgeLabels({
                   </>
                 )}
                 <text
-                  className="plate-svg-pick plate-svg-pick--imprint"
+                  className={`plate-svg-pick plate-svg-pick--imprint${isOverflowLine ? ' plate-svg-pick--overflow' : ''}`}
                   x={kind != null ? textX : cx}
                   y={y}
                   textAnchor={kind != null ? 'start' : 'middle'}
