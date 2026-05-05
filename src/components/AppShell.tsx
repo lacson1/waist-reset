@@ -73,11 +73,8 @@ export function AppShell() {
     window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0')
   }, [sidebarCollapsed])
 
-  useEffect(() => {
-    if (desktopNav) setSidebarOpen(false)
-  }, [desktopNav])
-
   const sidebarHiddenFromAt = desktopNav && sidebarCollapsed
+  const isSidebarOpen = !desktopNav && sidebarOpen
 
   return (
     <>
@@ -87,7 +84,7 @@ export function AppShell() {
             type="button"
             className="menu-toggle"
             aria-label="Open navigation menu"
-            aria-expanded={sidebarOpen}
+            aria-expanded={isSidebarOpen}
             aria-controls="sidebar"
             onClick={() => setSidebarOpen((o) => !o)}
           >
@@ -144,7 +141,7 @@ export function AppShell() {
 
       <div className={`app${sidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
         <aside
-          className={`sidebar${sidebarOpen ? ' open' : ''}`}
+          className={`sidebar${isSidebarOpen ? ' open' : ''}`}
           id="sidebar"
           aria-hidden={sidebarHiddenFromAt ? true : undefined}
         >

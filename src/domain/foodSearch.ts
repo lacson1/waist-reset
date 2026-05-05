@@ -1,7 +1,7 @@
 import type { FoodRow } from './foods'
 import { inferFoodCat, slotAcceptedCats, type FoodCat } from './foodCategory'
 import { slotsForTemplate, type MealSlot, type MealTemplate } from './plateMeal'
-import { foodTypeKind, type FoodTypeKind } from '../components/plate/FoodTypeIcon'
+import { foodTypeKind, type FoodTypeKind } from '../components/plate/foodTypeMeta'
 
 /** Lowercase + strip combining marks for forgiving match (e.g. résumé vs resume). */
 function normalizeForSearch(s: string): string {

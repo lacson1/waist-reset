@@ -39,8 +39,6 @@ export function useFoods() {
 
   useEffect(() => {
     let cancelled = false
-    setErr(null)
-    setLoading(true)
     loadFoods(import.meta.env.BASE_URL)
       .then((data) => {
         if (!cancelled) {
@@ -61,6 +59,8 @@ export function useFoods() {
   }, [reloadKey])
 
   const reload = useCallback(() => {
+    setErr(null)
+    setLoading(true)
     setReloadKey((k) => k + 1)
   }, [])
 

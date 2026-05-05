@@ -1,7 +1,6 @@
 type Props = {
   showCollapsibleHint: boolean
   onDismissHint: () => void
-  templateSwitchBanner: string | null
   savedMealBanner: string | null
   addedLineBanner: string | null
 }
@@ -15,7 +14,6 @@ type Props = {
 export function PlateMealBuilderIntro({
   showCollapsibleHint,
   onDismissHint,
-  templateSwitchBanner,
   savedMealBanner,
   addedLineBanner,
 }: Props) {
@@ -42,12 +40,6 @@ export function PlateMealBuilderIntro({
             OK
           </button>
         </div>
-      )}
-
-      {templateSwitchBanner && (
-        <p className="plate-meal-builder__notice" role="status">
-          {templateSwitchBanner}
-        </p>
       )}
 
       {savedMealBanner && (

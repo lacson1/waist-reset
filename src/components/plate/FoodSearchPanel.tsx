@@ -27,10 +27,8 @@ import { useRecentFoodsStore } from "../../store/recentFoodsStore";
 import { useFoodSearchPrefsStore } from "../../store/foodSearchPrefsStore";
 import {
   FoodTypeIcon,
-  foodTypeKind,
-  foodTypeLabel,
-  type FoodTypeKind,
 } from "./FoodTypeIcon";
+import { foodTypeKind, foodTypeLabel, type FoodTypeKind } from "./foodTypeMeta";
 
 const CATEGORY_ORDER: readonly FoodTypeKind[] = [
   "protein",
@@ -241,28 +239,31 @@ export function FoodSearchPanel({
     showOffSlot,
   ]);
 
-  /** Reset highlight whenever the visible list shape changes. */
-  useEffect(() => {
-    setHighlightedIdx(-1);
-  }, [
-    trimmedQuery,
-    persistedCategories,
-    branch,
-    fitsSlot,
-    sort,
-    expandedKinds,
-    showOffSlot,
-  ]);
+  const highlightContextKey = useMemo(
+    () =>
+      JSON.stringify({
+        q: trimmedQuery,
+        c: persistedCategories,
+        b: branch,
+        f: fitsSlot,
+        s: sort,
+        e: [...expandedKinds],
+        o: showOffSlot ? 1 : 0,
+      }),
+    [trimmedQuery, persistedCategories, branch, fitsSlot, sort, expandedKinds, showOffSlot],
+  );
+  const [highlightCtx, setHighlightCtx] = useState<string>(highlightContextKey);
+  const effectiveHighlightedIdx = highlightCtx === highlightContextKey ? highlightedIdx : -1;
 
   useEffect(() => {
-    if (highlightedIdx < 0) return;
+    if (effectiveHighlightedIdx < 0) return;
     const root = listRef.current;
     if (!root) return;
     const el = root.querySelector<HTMLElement>(
-      `[data-rowindex="${highlightedIdx}"]`,
+      `[data-rowindex="${effectiveHighlightedIdx}"]`,
     );
     el?.scrollIntoView({ block: "nearest" });
-  }, [highlightedIdx]);
+  }, [effectiveHighlightedIdx]);
 
   const slotText = slotLabel(template, activeSlot);
 
@@ -306,24 +307,26 @@ export function FoodSearchPanel({
         setHighlightedIdx((i) =>
           i < 0 ? 0 : Math.min(i + 1, flatVisible.length - 1),
         );
+        setHighlightCtx(highlightContextKey);
         return true;
       }
       if (key === "ArrowUp") {
         e.preventDefault();
         setHighlightedIdx((i) => (i <= 0 ? -1 : i - 1));
+        setHighlightCtx(highlightContextKey);
         return true;
       }
       if (key === "Enter") {
-        if (highlightedIdx >= 0 && flatVisible[highlightedIdx]) {
+        if (effectiveHighlightedIdx >= 0 && flatVisible[effectiveHighlightedIdx]) {
           e.preventDefault();
           e.stopPropagation();
-          handleAdd(flatVisible[highlightedIdx]);
+          handleAdd(flatVisible[effectiveHighlightedIdx]);
           return true;
         }
       }
       return false;
     },
-    [flatVisible, highlightedIdx, handleAdd],
+    [flatVisible, effectiveHighlightedIdx, handleAdd, highlightContextKey],
   );
 
   const onInputKeyDown = useCallback(
@@ -373,7 +376,6 @@ export function FoodSearchPanel({
     );
   }
 
-  /* eslint-disable jsx-a11y/role-has-required-aria-props */
   return (
     <div
       ref={panelRef}
@@ -399,8 +401,8 @@ export function FoodSearchPanel({
             aria-controls={listboxId}
             aria-autocomplete="list"
             aria-activedescendant={
-              highlightedIdx >= 0
-                ? `${listboxId}-opt-${highlightedIdx}`
+              effectiveHighlightedIdx >= 0
+                ? `${listboxId}-opt-${effectiveHighlightedIdx}`
                 : undefined
             }
           />
@@ -547,7 +549,10 @@ export function FoodSearchPanel({
               highlightedIdx={highlightedIdx}
               listboxId={listboxId}
               onAdd={handleAdd}
-              onHover={setHighlightedIdx}
+              onHover={(i) => {
+                setHighlightedIdx(i);
+                setHighlightCtx(highlightContextKey);
+              }}
               onClearAll={clearRecent}
               addLabel={slotText}
               showBranchTag={branch === "all"}
@@ -573,7 +578,10 @@ export function FoodSearchPanel({
                     highlightedIdx={highlightedIdx}
                     listboxId={listboxId}
                     onAdd={handleAdd}
-                    onHover={setHighlightedIdx}
+                    onHover={(i) => {
+                      setHighlightedIdx(i);
+                      setHighlightCtx(highlightContextKey);
+                    }}
                     addLabel={slotText}
                     showBranchTag={branch === "all"}
                     expandable={
@@ -606,7 +614,10 @@ export function FoodSearchPanel({
                   highlightedIdx={highlightedIdx}
                   listboxId={listboxId}
                   onAdd={handleAdd}
-                  onHover={setHighlightedIdx}
+                  onHover={(i) => {
+                    setHighlightedIdx(i);
+                    setHighlightCtx(highlightContextKey);
+                  }}
                   compact
                   addLabel={slotText}
                   showBranchTag={branch === "all"}
@@ -643,7 +654,10 @@ export function FoodSearchPanel({
                     highlightedIdx={highlightedIdx}
                     listboxId={listboxId}
                     onAdd={handleAdd}
-                    onHover={setHighlightedIdx}
+                    onHover={(i) => {
+                      setHighlightedIdx(i);
+                      setHighlightCtx(highlightContextKey);
+                    }}
                     compact
                     addLabel={slotText}
                     showBranchTag={branch === "all"}
@@ -661,7 +675,10 @@ export function FoodSearchPanel({
               highlightedIdx={highlightedIdx}
               listboxId={listboxId}
               onAdd={handleAdd}
-              onHover={setHighlightedIdx}
+              onHover={(i) => {
+                setHighlightedIdx(i);
+                setHighlightCtx(highlightContextKey);
+              }}
               compact
               addLabel={slotText}
               showBranchTag={branch === "all"}
@@ -681,7 +698,6 @@ export function FoodSearchPanel({
       </p>
     </div>
   );
-  /* eslint-enable jsx-a11y/role-has-required-aria-props */
 }
 
 function FoodGroup({

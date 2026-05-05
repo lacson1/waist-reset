@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   FOOD_SWAP_CATEGORIES,
   FOOD_SWAPS_INTRO,
@@ -190,7 +190,6 @@ function shortCategoryTitle(title: string) {
 
 export function FoodSwapsPage() {
   const defaultTab: FoodSwapsMainTab = 'top-ten'
-  const location = useLocation()
   const [activeTab, setActiveTab] = useState<FoodSwapsMainTab>(() => {
     if (typeof window === 'undefined') return defaultTab
     return hashToTab(window.location.hash.slice(1)) ?? defaultTab
@@ -201,13 +200,6 @@ export function FoodSwapsPage() {
     const hash = tabToHash(tab)
     window.history.replaceState(null, '', `#${hash}`)
   }, [])
-
-  useEffect(() => {
-    const fromUrl = location.hash.slice(1)
-    if (!fromUrl) return
-    const next = hashToTab(fromUrl)
-    if (next) setActiveTab(next)
-  }, [location.hash])
 
   useEffect(() => {
     const onHash = () => {

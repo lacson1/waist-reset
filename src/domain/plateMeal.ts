@@ -110,15 +110,6 @@ export function scaledFoodQtyLabel(refQty: string, portion: number): string {
   return tail.length > 0 ? `${numStr}${sp}${tail}` : `${numStr}${sp}`.trimEnd()
 }
 
-/** How many current meal lines would be dropped if switching to `newTemplate` (slot not on new template). */
-export function countItemsRemovedOnTemplateChange(
-  items: MealLineItem[],
-  newTemplate: MealTemplate,
-): number {
-  const valid = new Set(slotsForTemplate(newTemplate) as string[])
-  return items.filter((it) => !valid.has(it.slot as string)).length
-}
-
 export function scaledMacros(row: MealLineItem): { kcal: number; p: number; f: number; c: number } {
   const base =
     row.source === 'food' && row.foodSnapshot

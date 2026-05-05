@@ -7,7 +7,6 @@ import {
   type MealTemplate,
   DEFAULT_ACTIVE_SLOT,
   compareToPhase,
-  countItemsRemovedOnTemplateChange,
   mealFocusNarrative,
   slotLabel,
   slotsForTemplate,
@@ -24,12 +23,6 @@ import { PlateMealTotals } from "./builder/PlateMealTotals";
 import { PlateTemplatePicker } from "./builder/PlateTemplatePicker";
 import { PlateVisual } from "./builder/PlateVisual";
 import { PlateWedgeContext } from "./builder/PlateWedgeContext";
-
-const TEMPLATE_CHOICE_LABEL: Record<MealTemplate, string> = {
-  rest: "Rest day",
-  training: "Training day",
-  soup: "Soup bowl",
-};
 
 const PLATE_COLLAPSIBLE_HINT_KEY = "vat_plate_collapsible_hint_v1";
 
@@ -96,25 +89,12 @@ export function PlateMealBuilder({
   const clearItems = usePlateBuilderStore((s) => s.clearItems);
   const resetBuilder = usePlateBuilderStore((s) => s.resetBuilder);
 
-  const [templateDialog, setTemplateDialog] = useState<{
-    next: MealTemplate;
-    removed: number;
-  } | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [templateSwitchBanner, setTemplateSwitchBanner] = useState<
-    string | null
-  >(null);
   const [savedMealBanner, setSavedMealBanner] = useState<string | null>(null);
   const [addedLineBanner, setAddedLineBanner] = useState<string | null>(null);
   const [showCollapsibleHint, setShowCollapsibleHint] = useState(
     () => !readHintDismissed(),
   );
-
-  useEffect(() => {
-    if (!templateSwitchBanner) return;
-    const t = window.setTimeout(() => setTemplateSwitchBanner(null), 5200);
-    return () => window.clearTimeout(t);
-  }, [templateSwitchBanner]);
 
   useEffect(() => {
     if (!savedMealBanner) return;
@@ -142,27 +122,10 @@ export function PlateMealBuilder({
   const handleTemplatePick = useCallback(
     (next: MealTemplate) => {
       if (next === template) return;
-      const removed = countItemsRemovedOnTemplateChange(items, next);
-      if (removed > 0) {
-        setTemplateDialog({ next, removed });
-        return;
-      }
       setTemplate(next);
     },
-    [items, setTemplate, template],
+    [setTemplate, template],
   );
-
-  const confirmTemplateDialog = useCallback(() => {
-    if (!templateDialog) return;
-    const { next, removed } = templateDialog;
-    setTemplate(next);
-    setTemplateDialog(null);
-    if (removed > 0) {
-      setTemplateSwitchBanner(
-        `${removed} line${removed === 1 ? "" : "s"} removed — slots don’t match the new template.`,
-      );
-    }
-  }, [setTemplate, templateDialog]);
 
   const dismissCollapsibleHint = useCallback(() => {
     persistHintDismissed();
@@ -232,7 +195,6 @@ export function PlateMealBuilder({
       <PlateMealBuilderIntro
         showCollapsibleHint={showCollapsibleHint}
         onDismissHint={dismissCollapsibleHint}
-        templateSwitchBanner={templateSwitchBanner}
         savedMealBanner={savedMealBanner}
         addedLineBanner={addedLineBanner}
       />
@@ -299,27 +261,6 @@ export function PlateMealBuilder({
         phaseKcal={phaseKcal}
         targetProtein={targetProtein}
         onAddCustomItem={addCustomItem}
-      />
-
-      <PlateConfirmDialog
-        open={templateDialog != null}
-        titleId="plate-template-dialog-title"
-        title="Change template?"
-        body={
-          templateDialog ? (
-            <p>
-              Switching to{" "}
-              <strong>{TEMPLATE_CHOICE_LABEL[templateDialog.next]}</strong>{" "}
-              removes <strong>{templateDialog.removed}</strong> line
-              {templateDialog.removed === 1 ? "" : "s"} (slots that do not exist
-              on the new plate).
-            </p>
-          ) : null
-        }
-        confirmLabel="Switch template"
-        confirmTestId="meal-template-confirm"
-        onCancel={() => setTemplateDialog(null)}
-        onConfirm={confirmTemplateDialog}
       />
 
       <PlateConfirmDialog

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useFoods } from '../domain/foods'
-import { FoodTypeIcon, foodTypeKind } from '../components/plate/FoodTypeIcon'
+import { FoodTypeIcon } from '../components/plate/FoodTypeIcon'
+import { foodTypeKind } from '../components/plate/foodTypeMeta'
 
 export type { FoodRow } from '../domain/foods'
 

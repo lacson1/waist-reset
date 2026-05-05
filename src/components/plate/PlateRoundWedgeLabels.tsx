@@ -1,6 +1,7 @@
 import type { PlatePickLine } from '../../domain/plateMeal'
-import type { FoodTypeKind } from './FoodTypeIcon'
-import { FoodTypeGlyph, foodTypeKind } from './FoodTypeIcon'
+import type { FoodTypeKind } from './foodTypeMeta'
+import { foodTypeKind } from './foodTypeMeta'
+import { FoodTypeGlyph } from './FoodTypeIcon'
 import { wrapPlatePickLabel } from './platePickLabelWrap'
 
 /** Icon left of text; column nudged inward (less negative) so lines stay inside curved wedge clips. */

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   type MealLineItem,
   type MealSlot,
@@ -7,7 +7,8 @@ import {
   slotLabel,
   slotsForTemplate,
 } from '../../../domain/plateMeal'
-import { FoodTypeIcon, foodTypeKind } from '../FoodTypeIcon'
+import { FoodTypeIcon } from '../FoodTypeIcon'
+import { foodTypeKind } from '../foodTypeMeta'
 import { IconRemoveLine } from './PlateMealBuilder.icons'
 
 type Props = {
@@ -75,15 +76,25 @@ export function PlateMealLines({
       ? 'Open meal lines — no lines yet; add foods or custom lines, save, or clear.'
       : `Open meal lines — ${items.length} line${items.length === 1 ? '' : 's'}; edit portions, save to today, or clear.`
 
-  const slotOrder = slotsForTemplate(template)
-
-  const groupedBySlot = slotOrder
-    .map((slot) => ({
-      slot,
-      slotText: slotLabel(template, slot),
-      items: items.filter((it) => it.slot === slot),
-    }))
-    .filter((g) => g.items.length > 0)
+  const groupedBySlot = useMemo(() => {
+    const slotOrder = slotsForTemplate(template)
+    const groupedBySlotMap = new Map<MealSlot, MealLineItem[]>()
+    for (const item of items) {
+      const existing = groupedBySlotMap.get(item.slot)
+      if (existing) existing.push(item)
+      else groupedBySlotMap.set(item.slot, [item])
+    }
+    return slotOrder
+      .map((slot) => {
+        const slotItems = groupedBySlotMap.get(slot) ?? []
+        return {
+          slot,
+          slotText: slotLabel(template, slot),
+          items: slotItems,
+        }
+      })
+      .filter((group) => group.items.length > 0)
+  }, [items, template])
 
   return (
     <div

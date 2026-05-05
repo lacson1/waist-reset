@@ -1,8 +1,9 @@
 import { useId } from 'react'
 import type { KeyboardEvent } from 'react'
 import type { PlatePickLine } from '../../domain/plateMeal'
-import type { FoodTypeKind } from './FoodTypeIcon'
-import { FoodTypeGlyph, foodTypeKind } from './FoodTypeIcon'
+import type { FoodTypeKind } from './foodTypeMeta'
+import { foodTypeKind } from './foodTypeMeta'
+import { FoodTypeGlyph } from './FoodTypeIcon'
 import { wrapPlatePickLabel } from './platePickLabelWrap'
 
 export type SoupBowlSlot = 'base' | 'protein' | 'leafy' | 'aromatics' | 'optional'

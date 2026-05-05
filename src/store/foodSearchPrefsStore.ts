@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { FoodTypeKind } from '../components/plate/FoodTypeIcon'
+import type { FoodTypeKind } from '../components/plate/foodTypeMeta'
 import type { FoodBranchFilter, FoodSortKey } from '../domain/foodSearch'
 
 export const FOOD_SEARCH_PREFS_STORAGE_KEY = 'vat_food_search_prefs_v1'
