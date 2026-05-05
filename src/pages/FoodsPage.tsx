@@ -1,47 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useFoods } from '../domain/foods'
+import { FoodTypeIcon, foodTypeKind } from '../components/plate/FoodTypeIcon'
 
-export interface FoodRow {
-  n: string
-  b: string
-  t: string
-  r?: string
-  qty: string
-  kcal: number
-  p: number
-  f: number
-  c: number
-  g?: string
-  mech?: string
-  ev?: string
-  prep?: string
-}
+export type { FoodRow } from '../domain/foods'
 
 export function FoodsPage() {
-  const [raw, setRaw] = useState<FoodRow[] | null>(null)
-  const [err, setErr] = useState<string | null>(null)
+  const { raw, err, loading } = useFoods()
   const [q, setQ] = useState('')
   const [branch, setBranch] = useState<'all' | 'General' | 'African'>('all')
   const [type, setType] = useState<string>('all')
   const [sortKey, setSortKey] = useState<'n' | 'kcal' | 'p'>('n')
-
-  useEffect(() => {
-    let cancelled = false
-    fetch(`${import.meta.env.BASE_URL}foods.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json() as Promise<FoodRow[]>
-      })
-      .then((data) => {
-        if (!cancelled) setRaw(Array.isArray(data) ? data : [])
-      })
-      .catch(() => {
-        if (!cancelled) setErr('Could not load foods.json')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const types = useMemo(() => {
     if (!raw) return [] as string[]
@@ -118,7 +87,7 @@ export function FoodsPage() {
           </label>
         </div>
         <p className="food-count muted">
-          {raw == null && !err ? 'Loading…' : err ? err : `${rows.length} shown (${raw?.length ?? 0} total)`}
+          {loading ? 'Loading…' : err ? err : `${rows.length} shown (${raw?.length ?? 0} total)`}
         </p>
       </div>
 
@@ -126,7 +95,10 @@ export function FoodsPage() {
         {rows.map((f) => (
           <article key={`${f.n}-${f.qty}`} className="food-card">
             <div className="food-card-top">
-              <h3>{f.n}</h3>
+              <div className="food-card-title">
+                <FoodTypeIcon kind={foodTypeKind(f.t)} size="md" />
+                <h3>{f.n}</h3>
+              </div>
               {f.g && <span className="pill pill--teal">{f.g}</span>}
             </div>
             <div className="food-meta">

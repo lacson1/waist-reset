@@ -47,8 +47,9 @@ export function StartPage() {
               <strong>Log daily</strong>
             </div>
             <p className="qs-body">
-              Use <Link to="/today">Today</Link> for checklists and quick log, and <Link to="/coach">Coach</Link>{' '}
-              for adaptive feedback once you have a baseline.
+              Use <Link to="/plate">Plate System</Link> for meal structure, <Link to="/today">Today</Link> for
+              checklists and quick log, and <Link to="/coach">Coach</Link> for adaptive feedback once you have a
+              baseline.
             </p>
           </div>
         </div>

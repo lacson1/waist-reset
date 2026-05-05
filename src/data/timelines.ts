@@ -1,3 +1,5 @@
+import type { MealTemplate } from '../domain/plateMeal'
+
 export interface TimelineEntry {
   time: string
   state: 'fed' | 'fasted'
@@ -5,6 +7,8 @@ export interface TimelineEntry {
   label: string
   detail: string
   mech: string
+  /** When set, Daily plan links to Plate with this template (see `/plate?template=…`). */
+  plateTemplate?: MealTemplate
 }
 
 export const TIMELINE_GENERAL: TimelineEntry[] = [
@@ -31,6 +35,7 @@ export const TIMELINE_GENERAL: TimelineEntry[] = [
     label: 'Break Fast (~550 kcal)',
     detail: 'Sardines/stockfish on spinach/ugu + avocado + EVOO + garlic + cayenne',
     mech: '28g protein. Omega-3 + MUFA stack',
+    plateTemplate: 'rest',
   },
   {
     time: '13:00',
@@ -47,6 +52,7 @@ export const TIMELINE_GENERAL: TimelineEntry[] = [
     label: 'Main Meal (~700 kcal)',
     detail: 'Chicken/salmon + broccoli + cabbage | lentils/plantain + shiitake + EVOO',
     mech: 'Cruciferous double. RS butyrate',
+    plateTemplate: 'training',
   },
   {
     time: '18:30',
@@ -63,6 +69,7 @@ export const TIMELINE_GENERAL: TimelineEntry[] = [
     label: 'Close Window (~500 kcal)',
     detail: '2 eggs + yoghurt + chia + cinnamon | Cucumber + konjac + MCT',
     mech: 'Casein overnight. Volume foods',
+    plateTemplate: 'rest',
   },
   {
     time: '19:30',
@@ -106,6 +113,7 @@ export const TIMELINE_AFRICAN: TimelineEntry[] = [
     label: 'Efo Riro (~550 kcal)',
     detail: 'Stockfish + sardines on ugu | Palm oil + EVOO + crayfish + uziza',
     mech: '45g protein. TRPV1 stack',
+    plateTemplate: 'soup',
   },
   {
     time: '12:30',
@@ -122,6 +130,7 @@ export const TIMELINE_AFRICAN: TimelineEntry[] = [
     label: 'Ogbono + Bitter Leaf (~700 kcal)',
     detail: 'Ogbono soup + bitter leaf + protein | Broccoli + dawadawa + EVOO + plantain/konjac',
     mech: 'PPARγ + α-glucosidase. Most dense meal',
+    plateTemplate: 'soup',
   },
   {
     time: '18:00',
@@ -138,6 +147,7 @@ export const TIMELINE_AFRICAN: TimelineEntry[] = [
     label: 'Edikang Ikong (~450 kcal)',
     detail: 'Nono + chia + cinnamon | Ugu + waterleaf + stockfish + crayfish + eggs + tiger nuts',
     mech: 'Two ultra-low-cal leaves. Nono = yoghurt',
+    plateTemplate: 'soup',
   },
   {
     time: '19:00',

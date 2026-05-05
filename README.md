@@ -42,3 +42,15 @@ CLI alternative (after `npx vercel login`):
 npx vercel link
 npx vercel --prod
 ```
+
+## Plate page: meal builder and photo estimate (BYOK)
+
+The **Plate** route includes a builder that sums kcal and macros from `public/foods.json` plus custom lines, persisted as `vat_plate_builder_v1` in localStorage. Optional **photo estimate** calls OpenAI’s chat completions API with a downscaled JPEG; your API key is stored only on the device (`vat_plate_prefs_v1`).
+
+OpenAI’s API does not allow direct browser calls (CORS). This repo uses:
+
+1. **Dev:** Vite proxies `POST /api/openai` → `https://api.openai.com/v1/chat/completions` (see `vite.config.ts`). Use `npm run dev` and leave the default proxy base `/api/openai`.
+2. **Prod (Vercel):** The serverless handler [`api/openai.ts`](api/openai.ts) forwards the same POST with your `Authorization: Bearer` header. Deploy on Vercel so `/api/openai` exists alongside the static Vite build.
+3. **Static-only hosts (e.g. GitHub Pages):** Deploy a tiny forwarder elsewhere and set **Proxy base URL** in the Plate UI to that origin (endpoint must accept the same JSON body as OpenAI’s chat completions API).
+
+This is educational software, not a medical device. Photo and macro totals are estimates.

@@ -4,6 +4,7 @@ import { useProgressStore, mergeTodayChecklist, quickLogToday } from '../store/p
 import { computePersonal, currentPhase, greetingText, phaseKcal, phaseKcalNote } from '../domain/personalisation'
 import { buildRecommendations, DEFAULT_CHECKLIST_ITEMS } from '../domain/coach'
 import { computeNextActions, fastStatus } from '../domain/todayActions'
+import { TodayMealsCard } from '../components/today/TodayMealsCard'
 
 export function TodayPage() {
   const baseline = useProgressStore((s) => s.baseline)
@@ -98,17 +99,17 @@ export function TodayPage() {
       <div className="card playbook-card">
         <div className="section-title">Today&apos;s playbook</div>
         <p className="playbook-lead">
-          Use your numbers below, then pick structure and food. The example day is generic — your phase kcal and protein
-          targets are the protocol truth.
+          Use your numbers below, then model mains on the plate (rest / training / soup). Match timing to{' '}
+          <Link to="/daily">Daily plan</Link> when helpful — phase kcal and protein targets are the protocol truth.
         </p>
         <div className="playbook-grid">
-          <Link className="playbook-tile" to="/daily">
-            <strong>Daily structure</strong>
-            <span>Example clock for General vs African emphasis</span>
-          </Link>
           <Link className="playbook-tile" to="/plate">
             <strong>Plate system</strong>
             <span>Rest / training / soup templates</span>
+          </Link>
+          <Link className="playbook-tile" to="/daily">
+            <strong>Daily structure</strong>
+            <span>Example clock for General vs African emphasis</span>
           </Link>
           <Link className="playbook-tile" to="/swaps">
             <strong>Food swaps</strong>
@@ -179,6 +180,8 @@ export function TodayPage() {
           ))}
         </div>
       </div>
+
+      <TodayMealsCard />
 
       <div className="card">
         <div className="section-title">Today&apos;s protocol</div>

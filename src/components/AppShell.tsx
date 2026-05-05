@@ -16,62 +16,45 @@ function useDesktopNav() {
   return desktop
 }
 
+/** Three groups: execution, protocol depth, day-to-day tools + tracking (fewer headings than six micro-sections). */
 const NAV_GROUPS: { id: string; label: string; items: { to: string; label: string }[] }[] = [
   {
-    id: 'orient',
-    label: 'Get oriented',
+    id: 'workflow',
+    label: 'Your workflow',
     items: [
       { to: '/start', label: 'Start Here' },
-      { to: '/plate', label: 'Plate System' },
-      { to: '/swaps', label: 'Food Swaps' },
-    ],
-  },
-  {
-    id: 'day',
-    label: 'Your day',
-    items: [
       { to: '/today', label: 'Today' },
+      { to: '/plate', label: 'Plate System' },
       { to: '/daily', label: 'Daily Plan' },
       { to: '/coach', label: 'Coach' },
+      { to: '/swaps', label: 'Food Swaps' },
+      { to: '/foods', label: 'Food Database' },
       { to: '/meals', label: 'Meal Builder' },
     ],
   },
   {
-    id: 'plan',
-    label: 'The plan',
+    id: 'protocol',
+    label: 'Protocol & science',
     items: [
       { to: '/overview', label: 'Overview' },
       { to: '/numbers', label: 'Your Numbers' },
       { to: '/phases', label: 'Phases' },
       { to: '/rules', label: 'Rules' },
+      { to: '/safety', label: 'Safety' },
+      { to: '/biomarkers', label: 'Biomarkers' },
+      { to: '/synergies', label: 'Synergies' },
+      { to: '/support', label: 'Support Stack' },
     ],
   },
   {
-    id: 'guides',
-    label: 'Practical guides',
+    id: 'living',
+    label: 'Living & tracking',
     items: [
       { to: '/supplements', label: 'Supplements' },
       { to: '/eatingout', label: 'Eating Out' },
       { to: '/shopping', label: 'Shopping List' },
       { to: '/resources', label: 'Resources' },
       { to: '/troubleshoot', label: 'Troubleshoot' },
-    ],
-  },
-  {
-    id: 'reference',
-    label: 'Reference',
-    items: [
-      { to: '/foods', label: 'Food Database' },
-      { to: '/biomarkers', label: 'Biomarkers' },
-      { to: '/synergies', label: 'Synergies' },
-      { to: '/support', label: 'Support Stack' },
-      { to: '/safety', label: 'Safety' },
-    ],
-  },
-  {
-    id: 'track',
-    label: 'Tracking',
-    items: [
       { to: '/review', label: 'Weekly Review' },
       { to: '/progress', label: 'My Progress' },
     ],
@@ -99,34 +82,64 @@ export function AppShell() {
   return (
     <>
       <header className="appbar">
-        <button
-          type="button"
-          className="menu-toggle"
-          aria-label="Open navigation menu"
-          aria-expanded={sidebarOpen}
-          aria-controls="sidebar"
-          onClick={() => setSidebarOpen((o) => !o)}
-        >
-          ☰
-        </button>
-        <button
-          type="button"
-          className="sidebar-rail-toggle"
-          aria-label={sidebarCollapsed ? 'Expand guide sidebar' : 'Collapse guide sidebar'}
-          aria-expanded={!sidebarCollapsed}
-          aria-controls="sidebar"
-          onClick={() => setSidebarCollapsed((c) => !c)}
-        >
-          {sidebarCollapsed ? '»' : '«'}
-        </button>
-        <div className="appbar-brand">
-          <span className="lacbis">LACBIS</span>
-          <span className="descriptor">Medical</span>
+        <div className="appbar-start">
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-label="Open navigation menu"
+            aria-expanded={sidebarOpen}
+            aria-controls="sidebar"
+            onClick={() => setSidebarOpen((o) => !o)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden focusable="false">
+              <path
+                fill="currentColor"
+                d="M4 7a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h14a1 1 0 110 2H5a1 1 0 01-1-1z"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="sidebar-rail-toggle"
+            aria-label={sidebarCollapsed ? 'Expand guide sidebar' : 'Collapse guide sidebar'}
+            aria-expanded={!sidebarCollapsed}
+            aria-controls="sidebar"
+            onClick={() => setSidebarCollapsed((c) => !c)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden focusable="false">
+              {sidebarCollapsed ? (
+                <path
+                  fill="currentColor"
+                  d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"
+                />
+              ) : (
+                <path
+                  fill="currentColor"
+                  d="M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"
+                />
+              )}
+            </svg>
+          </button>
+          <div className="appbar-identity">
+            <span className="appbar-product">The Waist Reset</span>
+            <span className="appbar-identity-gap" aria-hidden />
+            <div className="appbar-brand">
+              <span className="lacbis">LACBIS</span>
+              <span className="descriptor">Medical</span>
+            </div>
+          </div>
         </div>
-        <div className="appbar-divider" />
-        <div className="appbar-product">The Waist Reset</div>
         <div className="appbar-spacer" />
-        <div className="appbar-meta">React · Offline-ready</div>
+        <div className="appbar-end">
+          <span
+            className="appbar-chip"
+            role="status"
+            title="Built with React. Caches key content so the guide stays usable without a network once loaded."
+          >
+            <span className="appbar-chip-dot" aria-hidden />
+            Offline-ready
+          </span>
+        </div>
       </header>
 
       <div className={`app${sidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
@@ -135,16 +148,7 @@ export function AppShell() {
           id="sidebar"
           aria-hidden={sidebarHiddenFromAt ? true : undefined}
         >
-          <div className="brand">
-            <div className="brand-logo">
-              <div className="brand-mark">VF</div>
-              <div>
-                <div className="brand-name">The Waist Reset</div>
-                <div className="brand-sub">African-Mediterranean</div>
-              </div>
-            </div>
-          </div>
-          <nav className="nav" aria-label="Guide sections">
+          <nav className="nav nav--top" aria-label="Guide sections">
             {NAV_GROUPS.map((g) => (
               <section key={g.id} className="nav-group" aria-labelledby={`nav-h-${g.id}`}>
                 <h2 className="nav-label" id={`nav-h-${g.id}`}>
@@ -166,10 +170,9 @@ export function AppShell() {
             ))}
           </nav>
           <div className="sidebar-footer">
-            <div className="sidebar-footer-title">Evidence grades</div>
-            <p className="sidebar-footer-grades">
-              <strong className="g-a">A</strong> RCT/Meta · <strong className="g-bp">B+</strong> Cohort ·{' '}
-              <strong className="g-b">B</strong> Prelim · <strong className="g-cp">C+</strong> Mech
+            <p className="sidebar-footer-grades" title="Evidence grades used in the guide">
+              <strong className="g-a">A</strong> RCT/meta · <strong className="g-bp">B+</strong> cohort ·{' '}
+              <strong className="g-b">B</strong> prelim · <strong className="g-cp">C+</strong> mech
             </p>
           </div>
         </aside>

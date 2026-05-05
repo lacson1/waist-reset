@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import {
   FOOD_SWAP_CATEGORIES,
   FOOD_SWAPS_INTRO,
@@ -165,115 +166,226 @@ function SwapRowCard({ row, accent }: { row: FoodSwapRow; accent: FoodSwapAccent
   )
 }
 
-function scrollToId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+type FoodSwapsMainTab = 'top-ten' | 'why' | (typeof FOOD_SWAP_CATEGORIES)[number]['id']
+
+function hashToTab(hash: string): FoodSwapsMainTab | null {
+  if (hash === 'section-top-ten') return 'top-ten'
+  if (hash === 'section-why') return 'why'
+  if (hash.startsWith('cat-')) {
+    const id = hash.slice(4)
+    if (FOOD_SWAP_CATEGORIES.some((c) => c.id === id)) return id as FoodSwapsMainTab
+  }
+  return null
+}
+
+function tabToHash(tab: FoodSwapsMainTab): string {
+  if (tab === 'top-ten') return 'section-top-ten'
+  if (tab === 'why') return 'section-why'
+  return `cat-${tab}`
+}
+
+function shortCategoryTitle(title: string) {
+  return title.replace(' (extended)', '')
 }
 
 export function FoodSwapsPage() {
+  const defaultTab: FoodSwapsMainTab = 'top-ten'
+  const location = useLocation()
+  const [activeTab, setActiveTab] = useState<FoodSwapsMainTab>(() => {
+    if (typeof window === 'undefined') return defaultTab
+    return hashToTab(window.location.hash.slice(1)) ?? defaultTab
+  })
+
+  const selectTab = useCallback((tab: FoodSwapsMainTab) => {
+    setActiveTab(tab)
+    const hash = tabToHash(tab)
+    window.history.replaceState(null, '', `#${hash}`)
+  }, [])
+
+  useEffect(() => {
+    const fromUrl = location.hash.slice(1)
+    if (!fromUrl) return
+    const next = hashToTab(fromUrl)
+    if (next) setActiveTab(next)
+  }, [location.hash])
+
+  useEffect(() => {
+    const onHash = () => {
+      const next = hashToTab(window.location.hash.slice(1))
+      if (next) setActiveTab(next)
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
   return (
     <section className="view active food-swaps-page">
-      <div className="food-swaps-hero">
-        <div className="food-swaps-hero__mesh" aria-hidden />
-        <div className="food-swaps-hero__glow" aria-hidden />
-        <div className="topbar food-swaps-hero__topbar">
-          <div className="topbar-left">
-            <div className="eyebrow">{FOOD_SWAPS_INTRO.eyebrow}</div>
-            <h1 className="food-swaps-hero__title">{FOOD_SWAPS_INTRO.title}</h1>
-            <div className="topbar-sub food-swaps-hero__lead">{FOOD_SWAPS_INTRO.lead}</div>
-            <div className="food-swaps-meta-row">
-              {FOOD_SWAPS_INTRO.chips.map((c) => (
-                <span key={c} className="food-swaps-chip">
-                  {c}
-                </span>
-              ))}
-              <span className="food-swaps-meta-hint">
-                Plate templates: <Link to="/plate">Plate system</Link>
-              </span>
+      <div className="food-swaps-page__inner">
+        <header className="food-swaps-hero">
+          <div className="food-swaps-hero__mesh" aria-hidden />
+          <div className="food-swaps-hero__glow" aria-hidden />
+          <div className="food-swaps-hero__frame" />
+          <div className="topbar food-swaps-hero__topbar">
+            <div className="topbar-left">
+              <div className="eyebrow">{FOOD_SWAPS_INTRO.eyebrow}</div>
+              <h1 className="food-swaps-hero__title">{FOOD_SWAPS_INTRO.title}</h1>
+              <div className="topbar-sub food-swaps-hero__lead">{FOOD_SWAPS_INTRO.lead}</div>
+              <div className="food-swaps-meta-row">
+                {FOOD_SWAPS_INTRO.chips.map((c) => (
+                  <span key={c} className="food-swaps-chip">
+                    {c}
+                  </span>
+                ))}
+              </div>
+              <p className="food-swaps-hero__plate">
+                <Link to="/plate" className="food-swaps-hero__plate-link">
+                  Open plate templates
+                </Link>
+                <span className="food-swaps-hero__plate-note"> — same protocol, portioned visually</span>
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <div className="food-swaps-tabs-shell">
+          <div className="food-swaps-tabs-ribbon">
+            <span className="food-swaps-tabs-ribbon__label">Sections</span>
+            <p className="food-swaps-tabs-ribbon__hint">
+              Tabs update the URL so you can bookmark or share a category.
+            </p>
+          </div>
+          <div className="food-swaps-tablist-wrap">
+            <div className="food-swaps-tablist-scroll" role="presentation">
+              <div
+                className="food-swaps-tablist"
+                role="tablist"
+                aria-label="Food swap sections"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  id="food-swaps-tab-top-ten"
+                  className={`food-swaps-tab${activeTab === 'top-ten' ? ' food-swaps-tab--active' : ''}`}
+                  aria-selected={activeTab === 'top-ten' ? 'true' : 'false'}
+                  onClick={() => selectTab('top-ten')}
+                >
+                  Top 10
+                </button>
+                {FOOD_SWAP_CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="tab"
+                    id={`food-swaps-tab-${c.id}`}
+                    className={`food-swaps-tab${activeTab === c.id ? ' food-swaps-tab--active' : ''}`}
+                    aria-selected={activeTab === c.id ? 'true' : 'false'}
+                    onClick={() => selectTab(c.id)}
+                  >
+                    {shortCategoryTitle(c.title)}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  role="tab"
+                  id="food-swaps-tab-why"
+                  className={`food-swaps-tab${activeTab === 'why' ? ' food-swaps-tab--active' : ''}`}
+                  aria-selected={activeTab === 'why' ? 'true' : 'false'}
+                  onClick={() => selectTab('why')}
+                >
+                  Why swaps
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="food-swaps-tabpanels">
+          <div
+            role="tabpanel"
+            id="food-swaps-panel-top-ten"
+            aria-labelledby="food-swaps-tab-top-ten"
+            hidden={activeTab !== 'top-ten'}
+          >
+            <div className="card food-swaps-top-ten food-swaps-top-ten--in-tabs" id="section-top-ten">
+              <div className="food-swaps-section-head">
+                <span className="food-swaps-section-kicker">Priority</span>
+                <h2 className="section-h section-h--flush">If you do nothing else</h2>
+              </div>
+              <p className="food-swaps-section-lead">
+                <strong>Top 10 highest-impact swaps</strong> — These ten changes account for most of the visceral-fat
+                reduction in the first 8 weeks. Stack them progressively — don&apos;t try them all in week one.
+              </p>
+              <ol className="food-swaps-top-list">
+                {TOP_TEN_SWAPS.map((s) => (
+                  <li key={s.rank} className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}`}>
+                    <div className="food-swaps-top-rank" aria-hidden>
+                      <span className="food-swaps-top-rank__circle">{s.rank}</span>
+                      {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
+                    </div>
+                    <div className="food-swaps-top-content">
+                      <SwapArrowTitle title={s.title} />
+                      <p className="food-swaps-top-body">{s.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          {FOOD_SWAP_CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              role="tabpanel"
+              id={`food-swaps-panel-${cat.id}`}
+              aria-labelledby={`food-swaps-tab-${cat.id}`}
+              hidden={activeTab !== cat.id}
+            >
+              <div
+                className={`card food-swaps-category-card food-swaps-category-card--accent-${cat.accent}`}
+                id={`cat-${cat.id}`}
+              >
+                <header className="food-swaps-cat-head">
+                  <div className="food-swaps-cat-head__icon">
+                    <CategoryGlyph id={cat.id} />
+                  </div>
+                  <div className="food-swaps-cat-head__text">
+                    <h2 className="section-h section-h--flush">{cat.title}</h2>
+                    {cat.lead && <p className="food-swaps-cat-lead">{cat.lead}</p>}
+                  </div>
+                </header>
+                <div className="food-swaps-row-cards">
+                  {cat.rows.map((row) => (
+                    <SwapRowCard key={`${cat.id}-${row.instead}`} row={row} accent={cat.accent} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <div
+            role="tabpanel"
+            id="food-swaps-panel-why"
+            aria-labelledby="food-swaps-tab-why"
+            hidden={activeTab !== 'why'}
+          >
+            <div className="card food-swaps-why food-swaps-why--in-tabs" id="section-why">
+              <div className="food-swaps-section-head">
+                <span className="food-swaps-section-kicker">Mindset</span>
+                <h2 className="section-h section-h--flush">{WHY_FOOD_SWAPS.title}</h2>
+              </div>
+              <div className="food-swaps-pillar-grid">
+                {WHY_FOOD_SWAPS.pillars.map((p, i) => (
+                  <div key={p.subtitle} className="food-swaps-pillar">
+                    <span className="food-swaps-pillar__step">{i + 1}</span>
+                    <h3>{p.subtitle}</h3>
+                    <p>{p.text}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="food-swaps-rule">{WHY_FOOD_SWAPS.rule}</p>
             </div>
           </div>
         </div>
-      </div>
-
-      <nav className="food-swaps-toc card" aria-label="On this page">
-        <span className="food-swaps-toc-label">Jump to</span>
-        <div className="food-swaps-toc-buttons">
-          <button type="button" className="food-swaps-toc-btn" onClick={() => scrollToId('section-top-ten')}>
-            Top 10
-          </button>
-          {FOOD_SWAP_CATEGORIES.map((c) => (
-            <button key={c.id} type="button" className="food-swaps-toc-btn" onClick={() => scrollToId(`cat-${c.id}`)}>
-              {c.title.replace(' (extended)', '')}
-            </button>
-          ))}
-          <button type="button" className="food-swaps-toc-btn" onClick={() => scrollToId('section-why')}>
-            Why swaps
-          </button>
         </div>
-      </nav>
-
-      <div className="card food-swaps-top-ten" id="section-top-ten">
-        <div className="food-swaps-section-head">
-          <span className="food-swaps-section-kicker">Priority</span>
-          <h2 className="section-h section-h--flush">If you do nothing else</h2>
-        </div>
-        <p className="food-swaps-section-lead">
-          <strong>Top 10 highest-impact swaps</strong> — These ten changes account for most of the visceral-fat reduction in
-          the first 8 weeks. Stack them progressively — don&apos;t try them all in week one.
-        </p>
-        <ol className="food-swaps-top-list">
-          {TOP_TEN_SWAPS.map((s) => (
-            <li key={s.rank} className={`food-swaps-top-item${s.badge ? ' food-swaps-top-item--hero' : ''}`}>
-              <div className="food-swaps-top-rank" aria-hidden>
-                <span className="food-swaps-top-rank__circle">{s.rank}</span>
-                {s.badge && <span className="food-swaps-top-badge">{s.badge}</span>}
-              </div>
-              <div className="food-swaps-top-content">
-                <SwapArrowTitle title={s.title} />
-                <p className="food-swaps-top-body">{s.body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {FOOD_SWAP_CATEGORIES.map((cat) => (
-        <div
-          key={cat.id}
-          className={`card food-swaps-category-card food-swaps-category-card--accent-${cat.accent}`}
-          id={`cat-${cat.id}`}
-        >
-          <header className="food-swaps-cat-head">
-            <div className="food-swaps-cat-head__icon">
-              <CategoryGlyph id={cat.id} />
-            </div>
-            <div className="food-swaps-cat-head__text">
-              <h2 className="section-h section-h--flush">{cat.title}</h2>
-              {cat.lead && <p className="food-swaps-cat-lead">{cat.lead}</p>}
-            </div>
-          </header>
-          <div className="food-swaps-row-cards">
-            {cat.rows.map((row) => (
-              <SwapRowCard key={`${cat.id}-${row.instead}`} row={row} accent={cat.accent} />
-            ))}
-          </div>
-        </div>
-      ))}
-
-      <div className="card food-swaps-why" id="section-why">
-        <div className="food-swaps-section-head">
-          <span className="food-swaps-section-kicker">Mindset</span>
-          <h2 className="section-h section-h--flush">{WHY_FOOD_SWAPS.title}</h2>
-        </div>
-        <div className="food-swaps-pillar-grid">
-          {WHY_FOOD_SWAPS.pillars.map((p, i) => (
-            <div key={p.subtitle} className="food-swaps-pillar">
-              <span className="food-swaps-pillar__step">{i + 1}</span>
-              <h3>{p.subtitle}</h3>
-              <p>{p.text}</p>
-            </div>
-          ))}
-        </div>
-        <p className="food-swaps-rule">{WHY_FOOD_SWAPS.rule}</p>
       </div>
     </section>
   )

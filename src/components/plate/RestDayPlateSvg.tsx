@@ -1,5 +1,8 @@
 import { useId } from 'react'
 import type { KeyboardEvent } from 'react'
+import type { PlatePickLine } from '../../domain/plateMeal'
+import { PlateRoundWedgeLabels } from './PlateRoundWedgeLabels'
+import { RoundPlateWedgeGradients } from './roundPlateWedgeGradients'
 
 export type RestDaySlot = 'veg' | 'protein' | 'fibre'
 
@@ -7,6 +10,8 @@ type Props = {
   activeSlot?: RestDaySlot | null
   interactive?: boolean
   onSlotSelect?: (slot: RestDaySlot) => void
+  /** Your picks — drawn on the wedge (short lines). */
+  slotPicks?: Partial<Record<RestDaySlot, readonly PlatePickLine[]>>
 }
 
 function wedgeClass(slot: RestDaySlot, active: RestDaySlot | null | undefined, interactive: boolean | undefined) {
@@ -17,7 +22,7 @@ function wedgeClass(slot: RestDaySlot, active: RestDaySlot | null | undefined, i
   return c
 }
 
-export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect }: Props) {
+export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect, slotPicks }: Props) {
   const uid = useId().replace(/:/g, '')
   const g = (name: string) => `rd-${uid}-${name}`
 
@@ -54,50 +59,64 @@ export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect }: Props
       aria-label={interactive ? 'Rest-day plate — tap a wedge or matching bullet' : undefined}
     >
       <defs>
-        <linearGradient id={g('rim')} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fdfcfa" />
-          <stop offset="45%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#ebe8e0" />
-        </linearGradient>
-        <linearGradient id={g('veg')} x1="22%" y1="0%" x2="78%" y2="100%">
-          <stop offset="0%" stopColor="#d8e6cc" />
-          <stop offset="50%" stopColor="#b6cfaa" />
-          <stop offset="100%" stopColor="#8aa67e" />
-        </linearGradient>
-        <linearGradient id={g('protein')} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fcefe6" />
-          <stop offset="50%" stopColor="#e8c9b4" />
-          <stop offset="100%" stopColor="#d4a88f" />
-        </linearGradient>
-        <linearGradient id={g('fibre')} x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#faf3dc" />
-          <stop offset="50%" stopColor="#edd9a8" />
-          <stop offset="100%" stopColor="#d9be78" />
-        </linearGradient>
-        <radialGradient id={g('hub')} cx="32%" cy="32%" r="72%">
+        <linearGradient id={g('rim')} x1="12%" y1="8%" x2="88%" y2="96%">
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="50%" stopColor="#f2efe8" />
-          <stop offset="100%" stopColor="#c9c0b4" />
+          <stop offset="22%" stopColor="#f7f8fa" />
+          <stop offset="48%" stopColor="#eceff3" />
+          <stop offset="78%" stopColor="#d4dae2" />
+          <stop offset="100%" stopColor="#aeb6c2" />
+        </linearGradient>
+        <radialGradient id={g('rim-shade')} cx="72%" cy="72%" r="78%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="55%" stopColor="#8a96a6" stopOpacity="0.14" />
+          <stop offset="100%" stopColor="#5a6574" stopOpacity="0.22" />
+        </radialGradient>
+        <RoundPlateWedgeGradients idPrefix={g} fibreOrCarbs="fibre" />
+        <radialGradient id={g('hub')} cx="32%" cy="32%" r="72%">
+          <stop offset="0%" stopColor="#f8f9fb" />
+          <stop offset="50%" stopColor="#eef1f3" />
+          <stop offset="100%" stopColor="#cfd5da" />
         </radialGradient>
         <radialGradient id={g('hub-shine')} cx="30%" cy="28%" r="55%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
           <stop offset="70%" stopColor="#ffffff" stopOpacity="0" />
         </radialGradient>
-        <filter id={g('plate-drop')} x="-25%" y="-25%" width="150%" height="150%">
-          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#16201f" floodOpacity="0.08" />
+        <filter id={g('plate-drop')} x="-45%" y="-45%" width="190%" height="190%">
+          <feDropShadow dx="0" dy="10" stdDeviation="8.5" floodColor="#1a2430" floodOpacity="0.18" />
         </filter>
+        {/* Same geometry as wedge paths — keeps titles + picks inside each zone */}
+        <clipPath id={g('clip-veg')}>
+          <path d="M 100 100 L 100 8 A 92 92 0 0 1 100 192 Z" />
+        </clipPath>
+        <clipPath id={g('clip-protein')}>
+          <path d="M 100 100 L 100 192 A 92 92 0 0 1 8 100 Z" />
+        </clipPath>
+        <clipPath id={g('clip-fibre')}>
+          <path d="M 100 100 L 8 100 A 92 92 0 0 1 100 8 Z" />
+        </clipPath>
       </defs>
 
+      <ellipse
+        cx="100"
+        cy="197.2"
+        rx="57"
+        ry="6.2"
+        fill="rgba(18, 28, 36, 0.085)"
+        aria-hidden
+      />
       <g filter={`url(#${g('plate-drop')})`}>
-        <circle cx="100" cy="100" r="92" fill={`url(#${g('rim')})`} stroke="#d5d0c6" strokeWidth="1.25" />
-        <circle cx="100" cy="100" r="88" fill="none" stroke="#fff" strokeWidth="1" strokeOpacity="0.55" />
+        <circle cx="100" cy="100" r="93.4" fill="none" stroke="rgba(255, 255, 255, 0.55)" strokeWidth="1.15" />
+        <circle cx="100" cy="100" r="92" fill={`url(#${g('rim')})`} stroke="#9aa6b4" strokeWidth="0.55" />
+        <circle cx="100" cy="100" r="92" fill={`url(#${g('rim-shade')})`} />
+        <circle cx="100" cy="100" r="88.5" fill="none" stroke="rgba(255, 255, 255, 0.42)" strokeWidth="0.95" />
+        <circle cx="100" cy="100" r="86.5" fill="none" stroke="rgba(42, 52, 62, 0.06)" strokeWidth="0.75" />
       </g>
 
       <path
         className={wedgeClass('veg', activeSlot, interactive)}
         d="M 100 100 L 100 8 A 92 92 0 0 1 100 192 Z"
         fill={`url(#${g('veg')})`}
-        stroke="rgba(255,255,255,0.5)"
+        stroke="rgba(255,255,255,0.32)"
         strokeWidth="1.25"
         strokeLinejoin="round"
         aria-label="Half plate vegetables"
@@ -107,7 +126,7 @@ export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect }: Props
         className={wedgeClass('protein', activeSlot, interactive)}
         d="M 100 100 L 100 192 A 92 92 0 0 1 8 100 Z"
         fill={`url(#${g('protein')})`}
-        stroke="rgba(255,255,255,0.5)"
+        stroke="rgba(255,255,255,0.32)"
         strokeWidth="1.25"
         strokeLinejoin="round"
         aria-label="Quarter plate lean protein"
@@ -117,26 +136,50 @@ export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect }: Props
         className={wedgeClass('fibre', activeSlot, interactive)}
         d="M 100 100 L 8 100 A 92 92 0 0 1 100 8 Z"
         fill={`url(#${g('fibre')})`}
-        stroke="rgba(255,255,255,0.5)"
+        stroke="rgba(255,255,255,0.32)"
         strokeWidth="1.25"
         strokeLinejoin="round"
         aria-label="Quarter plate fibre"
         {...wedgeA11y('fibre')}
       />
 
-      <circle cx="100" cy="100" r="13" fill={`url(#${g('hub')})`} stroke="#b8b0a4" strokeWidth="1" pointerEvents="none" />
+      <circle cx="100" cy="100" r="13" fill={`url(#${g('hub')})`} stroke="#b8c0c6" strokeWidth="1" pointerEvents="none" />
       <circle cx="100" cy="100" r="13" fill={`url(#${g('hub-shine')})`} pointerEvents="none" />
       <circle cx="95.5" cy="95" r="3.8" fill="#fff" fillOpacity="0.72" pointerEvents="none" />
 
-      <text className="plate-svg-label" x="138" y="54" pointerEvents="none">
-        ½ Veg
-      </text>
-      <text className="plate-svg-label" x="58" y="158" pointerEvents="none">
-        ¼ Protein
-      </text>
-      <text className="plate-svg-label" x="28" y="54" pointerEvents="none">
-        ¼ Fibre
-      </text>
+      <g clipPath={`url(#${g('clip-veg')})`}>
+        <PlateRoundWedgeLabels
+          cx={128}
+          titleY={100}
+          title="½ Veg"
+          lines={slotPicks?.veg}
+          titleTransform="translate(-7, 0)"
+          picksTransform="translate(7, 2)"
+          picksLeadGap={14}
+        />
+      </g>
+      <g clipPath={`url(#${g('clip-protein')})`}>
+        <PlateRoundWedgeLabels
+          cx={78}
+          titleY={116}
+          title="¼ Protein"
+          lines={slotPicks?.protein}
+          titleTransform="translate(4, -6)"
+          picksTransform="translate(4, 5)"
+          picksLeadGap={9}
+        />
+      </g>
+      <g clipPath={`url(#${g('clip-fibre')})`}>
+        <PlateRoundWedgeLabels
+          cx={74}
+          titleY={70}
+          title="¼ Fibre"
+          lines={slotPicks?.fibre}
+          titleTransform="translate(5, 6)"
+          picksTransform="translate(4, -8)"
+          picksLeadGap={2}
+        />
+      </g>
     </svg>
   )
 }

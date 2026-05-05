@@ -1,5 +1,9 @@
 import { useId } from 'react'
 import type { KeyboardEvent } from 'react'
+import type { PlatePickLine } from '../../domain/plateMeal'
+import type { FoodTypeKind } from './FoodTypeIcon'
+import { FoodTypeGlyph, foodTypeKind } from './FoodTypeIcon'
+import { wrapPlatePickLabel } from './platePickLabelWrap'
 
 export type SoupBowlSlot = 'base' | 'protein' | 'leafy' | 'aromatics' | 'optional'
 
@@ -7,14 +11,15 @@ type Props = {
   activeSlot?: SoupBowlSlot | null
   interactive?: boolean
   onSlotSelect?: (slot: SoupBowlSlot) => void
+  slotPicks?: Partial<Record<SoupBowlSlot, readonly PlatePickLine[]>>
 }
 
 const LAYER_META: { slot: SoupBowlSlot; y: number; h: number; g0: string; g1: string }[] = [
-  { slot: 'optional', y: 54, h: 22, g0: '#fff5f0', g1: '#edd6d0' },
-  { slot: 'aromatics', y: 76, h: 21, g0: '#f8e8ee', g1: '#e2c2ce' },
-  { slot: 'leafy', y: 97, h: 21, g0: '#f0dfe8', g1: '#d9b6c8' },
-  { slot: 'protein', y: 118, h: 20, g0: '#ead4df', g1: '#cf9fb4' },
-  { slot: 'base', y: 138, h: 22, g0: '#e0c8d6', g1: '#b87a95' },
+  { slot: 'optional', y: 54, h: 22, g0: '#faf9f8', g1: '#e4e1de' },
+  { slot: 'aromatics', y: 76, h: 21, g0: '#f5f3ef', g1: '#d9d4cc' },
+  { slot: 'leafy', y: 97, h: 21, g0: '#eef4f1', g1: '#a8bfb4' },
+  { slot: 'protein', y: 118, h: 20, g0: '#f1eef4', g1: '#b5adbc' },
+  { slot: 'base', y: 138, h: 22, g0: '#dcd8e2', g1: '#7d7788' },
 ]
 
 function layerClass(slot: SoupBowlSlot, active: SoupBowlSlot | null | undefined, interactive: boolean | undefined) {
@@ -23,6 +28,40 @@ function layerClass(slot: SoupBowlSlot, active: SoupBowlSlot | null | undefined,
   if (active === slot) c += ' is-active'
   else if (interactive && active) c += ' is-dim'
   return c
+}
+
+function BowlSteam() {
+  return (
+    <>
+      <path
+        d="M 80 32 Q 84 22 80 12"
+        stroke="#a8aeb4"
+        strokeOpacity="0.38"
+        strokeWidth="1.75"
+        fill="none"
+        strokeLinecap="round"
+        pointerEvents="none"
+      />
+      <path
+        d="M 100 30 Q 104 18 100 8"
+        stroke="#a8aeb4"
+        strokeOpacity="0.42"
+        strokeWidth="1.75"
+        fill="none"
+        strokeLinecap="round"
+        pointerEvents="none"
+      />
+      <path
+        d="M 120 32 Q 124 22 120 12"
+        stroke="#a8aeb4"
+        strokeOpacity="0.38"
+        strokeWidth="1.75"
+        fill="none"
+        strokeLinecap="round"
+        pointerEvents="none"
+      />
+    </>
+  )
 }
 
 function BowlDecor() {
@@ -34,39 +73,71 @@ function BowlDecor() {
       <text className="plate-svg-label plate-svg-label--bowl-sub" x="100" y="54" textAnchor="middle" pointerEvents="none">
         Steam · aromatics · protein
       </text>
-      <path
-        d="M 80 32 Q 84 22 80 12"
-        stroke="#9a8a96"
-        strokeOpacity="0.4"
-        strokeWidth="1.75"
-        fill="none"
-        strokeLinecap="round"
-        pointerEvents="none"
-      />
-      <path
-        d="M 100 30 Q 104 18 100 8"
-        stroke="#9a8a96"
-        strokeOpacity="0.45"
-        strokeWidth="1.75"
-        fill="none"
-        strokeLinecap="round"
-        pointerEvents="none"
-      />
-      <path
-        d="M 120 32 Q 124 22 120 12"
-        stroke="#9a8a96"
-        strokeOpacity="0.4"
-        strokeWidth="1.75"
-        fill="none"
-        strokeLinecap="round"
-        pointerEvents="none"
-      />
+      <BowlSteam />
     </>
   )
 }
 
+const BOWL_PICK_ICON_X = 68
+const BOWL_PICK_ICON_W = 6.75
+const BOWL_PICK_ICON_GAP = 3.5
+const BOWL_PICK_HALO_R = 5.65
+
+const BOWL_PICK_LINE_CHARS = 22
+const BOWL_PICK_TSPAN_DY = 5.15
+
+function BowlPickLine({ y, line }: { y: number; line: PlatePickLine }) {
+  const kind: FoodTypeKind | null = line.type ? foodTypeKind(line.type) : null
+  const textX = BOWL_PICK_ICON_X + BOWL_PICK_ICON_W + BOWL_PICK_ICON_GAP
+  const wrapped = wrapPlatePickLabel(line.label, BOWL_PICK_LINE_CHARS)
+  const lineCount = wrapped.length
+  const yFirst = y - ((lineCount - 1) * BOWL_PICK_TSPAN_DY) / 2
+  const iconYOffset = lineCount > 1 ? ((lineCount - 1) * BOWL_PICK_TSPAN_DY) / 2 : 0
+  const iconCx = BOWL_PICK_ICON_X + BOWL_PICK_ICON_W / 2
+  const iconCy = yFirst - 5.5 + BOWL_PICK_ICON_W / 2 + iconYOffset
+  return (
+    <g pointerEvents="none">
+      {kind != null && (
+        <>
+          <circle
+            className="plate-svg-pick-halo plate-svg-pick-halo--bowl"
+            data-kind={kind}
+            cx={iconCx}
+            cy={iconCy}
+            r={BOWL_PICK_HALO_R}
+          />
+          <svg
+            x={BOWL_PICK_ICON_X}
+            y={yFirst - 5.5 + iconYOffset}
+            width={BOWL_PICK_ICON_W}
+            height={BOWL_PICK_ICON_W}
+            viewBox="0 0 24 24"
+            className="plate-svg-pick-icon"
+            data-kind={kind}
+          >
+            <FoodTypeGlyph kind={kind} />
+          </svg>
+        </>
+      )}
+      <text
+        className="plate-svg-pick plate-svg-pick--bowl plate-svg-pick--imprint-bowl"
+        x={kind != null ? textX : 100}
+        y={yFirst}
+        textAnchor={kind != null ? 'start' : 'middle'}
+      >
+        <title>{line.label}</title>
+        {wrapped.map((ln, li) => (
+          <tspan key={li} x={kind != null ? textX : 100} dy={li === 0 ? 0 : BOWL_PICK_TSPAN_DY}>
+            {ln}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  )
+}
+
 export function SoupBowlSvg(props: Partial<Props> = {}) {
-  const { activeSlot, interactive, onSlotSelect } = props
+  const { activeSlot, interactive, onSlotSelect, slotPicks } = props
   const uid = useId().replace(/:/g, '')
   const g = (name: string) => `sb-${uid}-${name}`
   const clipId = g('clip')
@@ -75,29 +146,36 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
     return (
       <svg viewBox="0 0 200 200" className="plate-svg plate-svg--bowl" aria-hidden>
         <defs>
-          <linearGradient id={g('bowl-rim')} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={g('bowl-rim')} x1="14%" y1="10%" x2="86%" y2="94%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="55%" stopColor="#f7f4f0" />
-            <stop offset="100%" stopColor="#e8e2dc" />
+            <stop offset="28%" stopColor="#f4f5f9" />
+            <stop offset="100%" stopColor="#c4cad5" />
           </linearGradient>
-          <radialGradient id={g('liquid')} cx="50%" cy="40%" r="65%">
-            <stop offset="0%" stopColor="#f5e8ee" />
-            <stop offset="55%" stopColor="#e8ccd8" />
-            <stop offset="100%" stopColor="#c89aae" />
+          <radialGradient id={g('bowl-rim-shade')} cx="70%" cy="78%" r="88%">
+            <stop offset="35%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="100%" stopColor="#5c6370" stopOpacity="0.2" />
+          </radialGradient>
+          <radialGradient id={g('liquid')} cx="48%" cy="36%" r="72%">
+            <stop offset="0%" stopColor="#faf8fd" />
+            <stop offset="45%" stopColor="#d8d2e4" />
+            <stop offset="100%" stopColor="#6a6378" />
           </radialGradient>
           <linearGradient id={g('surface')} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fff" stopOpacity="0" />
-            <stop offset="45%" stopColor="#fff" stopOpacity="0.45" />
+            <stop offset="45%" stopColor="#fff" stopOpacity="0.48" />
             <stop offset="100%" stopColor="#fff" stopOpacity="0" />
           </linearGradient>
-          <filter id={g('bowl-shadow')} x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#3d1f2d" floodOpacity="0.12" />
+          <filter id={g('bowl-shadow')} x="-45%" y="-45%" width="190%" height="190%">
+            <feDropShadow dx="0" dy="10" stdDeviation="8.5" floodColor="#1a1824" floodOpacity="0.17" />
           </filter>
         </defs>
+        <ellipse cx="100" cy="179.5" rx="54" ry="5.8" fill="rgba(18, 16, 28, 0.09)" />
         <g filter={`url(#${g('bowl-shadow')})`}>
-          <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim')})`} stroke="#d4cbc4" strokeWidth="1.25" />
+          <ellipse cx="100" cy="115" rx="93.5" ry="61.2" fill="none" stroke="rgba(255, 255, 255, 0.48)" strokeWidth="1.05" />
+          <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim')})`} stroke="#9aa3b0" strokeWidth="0.55" />
+          <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim-shade')})`} />
         </g>
-        <ellipse cx="100" cy="105" rx="84" ry="50" fill={`url(#${g('liquid')})`} stroke="#a86b84" strokeWidth="0.75" strokeOpacity="0.35" />
+        <ellipse cx="100" cy="105" rx="84" ry="50" fill={`url(#${g('liquid')})`} stroke="#8d8898" strokeWidth="0.65" strokeOpacity="0.5" />
         <ellipse cx="100" cy="98" rx="72" ry="22" fill={`url(#${g('surface')})`} pointerEvents="none" />
         <ellipse
           cx="100"
@@ -105,10 +183,10 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
           rx="84"
           ry="50"
           fill="none"
-          stroke="#8e2a4d"
+          stroke="#9b96a8"
           strokeWidth="1"
           strokeDasharray="4 5"
-          strokeOpacity="0.28"
+          strokeOpacity="0.32"
         />
         <BowlDecor />
       </svg>
@@ -137,18 +215,27 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
         <clipPath id={clipId}>
           <ellipse cx="100" cy="105" rx="84" ry="50" />
         </clipPath>
-        <linearGradient id={g('bowl-rim')} x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id={g('bowl-rim')} x1="14%" y1="10%" x2="86%" y2="94%">
           <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="55%" stopColor="#f7f4f0" />
-          <stop offset="100%" stopColor="#e8e2dc" />
+          <stop offset="28%" stopColor="#f4f5f9" />
+          <stop offset="100%" stopColor="#c4cad5" />
         </linearGradient>
+        <radialGradient id={g('bowl-rim-shade')} cx="70%" cy="78%" r="88%">
+          <stop offset="35%" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="100%" stopColor="#5c6370" stopOpacity="0.2" />
+        </radialGradient>
+        <radialGradient id={g('bowl-depth')} cx="50%" cy="72%" r="78%">
+          <stop offset="0%" stopColor="#5c5468" stopOpacity="0" />
+          <stop offset="70%" stopColor="#3f384c" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#2a2535" stopOpacity="0.38" />
+        </radialGradient>
         <linearGradient id={g('surface')} x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#fff" stopOpacity="0" />
-          <stop offset="42%" stopColor="#fff" stopOpacity="0.35" />
+          <stop offset="42%" stopColor="#fff" stopOpacity="0.38" />
           <stop offset="100%" stopColor="#fff" stopOpacity="0" />
         </linearGradient>
-        <filter id={g('bowl-shadow')} x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#3d1f2d" floodOpacity="0.12" />
+        <filter id={g('bowl-shadow')} x="-45%" y="-45%" width="190%" height="190%">
+          <feDropShadow dx="0" dy="10" stdDeviation="8.5" floodColor="#1a1824" floodOpacity="0.17" />
         </filter>
         {LAYER_META.map(({ slot, g0, g1 }) => (
           <linearGradient key={slot} id={g(`ly-${slot}`)} x1="0%" y1="100%" x2="0%" y2="0%">
@@ -158,11 +245,15 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
         ))}
       </defs>
 
+      <ellipse cx="100" cy="179.5" rx="54" ry="5.8" fill="rgba(18, 16, 28, 0.09)" />
       <g filter={`url(#${g('bowl-shadow')})`}>
-        <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim')})`} stroke="#d4cbc4" strokeWidth="1.25" />
+        <ellipse cx="100" cy="115" rx="93.5" ry="61.2" fill="none" stroke="rgba(255, 255, 255, 0.48)" strokeWidth="1.05" />
+        <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim')})`} stroke="#9aa3b0" strokeWidth="0.55" />
+        <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim-shade')})`} />
       </g>
 
       <g clipPath={`url(#${clipId})`}>
+        <ellipse cx="100" cy="118" rx="80" ry="44" fill={`url(#${g('bowl-depth')})`} pointerEvents="none" />
         {LAYER_META.map(({ slot, y, h }) => (
           <rect
             key={slot}
@@ -172,7 +263,7 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
             width="168"
             height={h}
             fill={`url(#${g(`ly-${slot}`)})`}
-            stroke="rgba(142, 42, 77, 0.18)"
+            stroke="rgba(22, 32, 31, 0.14)"
             strokeWidth="1"
             tabIndex={0}
             role="button"
@@ -193,10 +284,28 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
           />
         ))}
         <ellipse cx="100" cy="98" rx="76" ry="20" fill={`url(#${g('surface')})`} pointerEvents="none" />
-        <ellipse cx="100" cy="105" rx="84" ry="50" fill="none" stroke="#8e2a4d" strokeWidth="1" strokeDasharray="4 5" strokeOpacity="0.22" pointerEvents="none" />
+        <ellipse cx="100" cy="105" rx="84" ry="50" fill="none" stroke="#9b96a8" strokeWidth="1" strokeDasharray="4 5" strokeOpacity="0.3" pointerEvents="none" />
       </g>
 
-      <BowlDecor />
+      <text className="plate-svg-label plate-svg-label--bowl-sub" x="100" y="44" textAnchor="middle" pointerEvents="none">
+        Tap a layer
+      </text>
+      <BowlSteam />
+      {slotPicks &&
+        LAYER_META.map(({ slot, y, h }) => {
+          const lines = slotPicks[slot]
+          if (!lines?.length) return null
+          const mid = y + h * 0.55
+          const lineGap = 7.5
+          const y0 = mid - ((lines.length - 1) * lineGap) / 2
+          return (
+            <g key={`picks-${slot}`} clipPath={`url(#${clipId})`}>
+              {lines.map((line, i) => (
+                <BowlPickLine key={`${slot}-${i}`} y={y0 + i * lineGap} line={line} />
+              ))}
+            </g>
+          )
+        })}
     </svg>
   )
 }

@@ -1,35 +1,26 @@
-import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useProgressStore } from '../store/progressStore'
+import { usePlateBuilderStore } from '../store/plateBuilderStore'
 import { computePersonal, phaseKcal, phaseKcalNote, currentPhase } from '../domain/personalisation'
-import { PLATE_SCENARIOS, PLATE_SWAPS } from '../data/plateContent'
-import { RestDayPlateSvg, type RestDaySlot } from '../components/plate/RestDayPlateSvg'
-import { TrainingDayPlateSvg, type TrainingDaySlot } from '../components/plate/TrainingDayPlateSvg'
-import { SoupBowlSvg, type SoupBowlSlot } from '../components/plate/SoupBowlSvg'
+import type { MealTemplate } from '../domain/plateMeal'
+import type { PlateScenarioPreset, PlateSwapRow } from '../data/plateContent'
+import { PLATE_SCENARIOS, PLATE_SWAP_SECTIONS } from '../data/plateContent'
+import { buildSwapCustomLine } from '../domain/plateSwapApply'
+import { PlateMealBuilder } from '../components/plate/PlateMealBuilder'
+import { PlateConfirmDialog } from '../components/plate/builder/PlateConfirmDialog'
 
-function PlateCopyLine<S extends string>({
-  slot,
-  active,
-  onPick,
-  children,
-}: {
-  slot: S
-  active: S | null
-  onPick: () => void
-  children: ReactNode
-}) {
-  const focused = active === slot
-  return (
-    <button
-      type="button"
-      className={`plate-copy-line plate-copy-line--btn${focused ? ' is-focused' : ''}`}
-      data-slot={slot}
-      aria-pressed={focused}
-      onClick={onPick}
-    >
-      {children}
-    </button>
-  )
+const MEAL_TEMPLATES: MealTemplate[] = ['rest', 'training', 'soup']
+
+function mealTemplateFromQuery(raw: string | null): MealTemplate | null {
+  if (raw == null || raw === '') return null
+  return MEAL_TEMPLATES.includes(raw as MealTemplate) ? (raw as MealTemplate) : null
+}
+
+function scrollPlateBuilderIntoView() {
+  document
+    .querySelector('[data-testid="plate-meal-builder"]')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 export function PlatePage() {
@@ -38,31 +29,73 @@ export function PlatePage() {
   const personal = computePersonal(baseline)
   const kcal = phaseKcal(phase, baseline)
   const kcalNote = phaseKcalNote(phase)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const setTemplate = usePlateBuilderStore((s) => s.setTemplate)
+  const plateTemplate = usePlateBuilderStore((s) => s.template)
+  const plateItemCount = usePlateBuilderStore((s) => s.items.length)
+  const setActiveSlot = usePlateBuilderStore((s) => s.setActiveSlot)
+  const addCustomItem = usePlateBuilderStore((s) => s.addCustomItem)
+  const applyPlatePreset = usePlateBuilderStore((s) => s.applyPlatePreset)
 
-  const [restSlot, setRestSlot] = useState<RestDaySlot | null>(null)
-  const [trainSlot, setTrainSlot] = useState<TrainingDaySlot | null>(null)
-  const [soupSlot, setSoupSlot] = useState<SoupBowlSlot | null>(null)
+  const [presetDialog, setPresetDialog] = useState<PlateScenarioPreset | null>(null)
 
-  const toggleRest = (s: RestDaySlot) => setRestSlot((p) => (p === s ? null : s))
-  const toggleTrain = (s: TrainingDaySlot) => setTrainSlot((p) => (p === s ? null : s))
-  const toggleSoup = (s: SoupBowlSlot) => setSoupSlot((p) => (p === s ? null : s))
+  const runApplyPreset = useCallback(
+    (preset: PlateScenarioPreset) => {
+      applyPlatePreset({ template: preset.template, lines: preset.lines })
+      setPresetDialog(null)
+      queueMicrotask(() => scrollPlateBuilderIntoView())
+    },
+    [applyPlatePreset],
+  )
+
+  const requestScenarioPreset = useCallback(
+    (preset: PlateScenarioPreset | undefined) => {
+      if (!preset) return
+      if (plateItemCount > 0) {
+        setPresetDialog(preset)
+        return
+      }
+      runApplyPreset(preset)
+    },
+    [plateItemCount, runApplyPreset],
+  )
+
+  const appendSwapVariant = useCallback(
+    (row: PlateSwapRow, variant: 'western' | 'african') => {
+      const built = buildSwapCustomLine(row, variant, plateTemplate)
+      if (!built) return
+      setActiveSlot(built.slot)
+      addCustomItem(built.slot, {
+        label: built.label,
+        kcal: built.kcal,
+        p: built.p,
+        f: built.f,
+        c: built.c,
+      })
+      queueMicrotask(() => scrollPlateBuilderIntoView())
+    },
+    [addCustomItem, plateTemplate, setActiveSlot],
+  )
+
+  useEffect(() => {
+    const t = mealTemplateFromQuery(searchParams.get('template'))
+    if (t == null) return
+    setTemplate(t)
+    const next = new URLSearchParams(searchParams)
+    next.delete('template')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, setTemplate])
 
   return (
     <section className="view active plate-page">
       <div className="topbar plate-page-topbar">
         <div className="topbar-left">
-          <div className="eyebrow">Plate-Building System</div>
+          <div className="eyebrow">Plate</div>
           <h1>Build the plate, not the calorie count.</h1>
           <div className="topbar-sub">
-            Three plate templates. Choose the one that matches your day. Calorie targets come from your{' '}
-            <Link to="/progress">baseline on My Progress</Link> for phase kcal and protein chips; use{' '}
-            <Link to="/numbers">Your Numbers</Link> for a standalone Mifflin–St Jeor pass. The plate structure stays
-            the same either way.
+            Chips from <Link to="/progress">My Progress</Link>. <Link to="/numbers">Your Numbers</Link> for
+            Mifflin–St Jeor. <Link to="/daily">Daily plan</Link> for example meal timing and kcal blocks.
           </div>
-          <p className="plate-split-hint plate-split-hint--topbar">
-            <strong>You build the plate:</strong> tap a coloured wedge or a bullet — the diagram and the text stay in
-            sync.
-          </p>
         </div>
         {kcal != null && (
           <div className="topbar-right">
@@ -75,137 +108,141 @@ export function PlatePage() {
         )}
       </div>
 
-      <div className="plate-templates-grid">
-        <article className="plate-template-card plate-template-card--teal plate-template-card--split">
-          <header className="plate-template-card__head">
-            <h3>Rest-day plate</h3>
-            <span className="plate-template-card__tag">Interactive</span>
-          </header>
-          <div className="plate-split-body">
-            <div className="plate-split-media">
-              <RestDayPlateSvg interactive activeSlot={restSlot} onSlotSelect={toggleRest} />
-              <span className="plate-split-hint">Tap a wedge</span>
-            </div>
-            <div className="plate-split-copy plate-copy">
-              <PlateCopyLine<RestDaySlot> slot="veg" active={restSlot} onPick={() => toggleRest('veg')}>
-                <strong>½ plate · Vegetables</strong> — leafy greens (spinach, ugu, ewedu, kale), cruciferous
-                (broccoli, cabbage, cauliflower), volume veg (cucumber, tomato, peppers).
-              </PlateCopyLine>
-              <PlateCopyLine<RestDaySlot> slot="protein" active={restSlot} onPick={() => toggleRest('protein')}>
-                <strong>¼ plate · Lean protein</strong> — sardines, chicken thigh, salmon, eggs, tofu, stockfish,
-                Greek yoghurt.
-              </PlateCopyLine>
-              <PlateCopyLine<RestDaySlot> slot="fibre" active={restSlot} onPick={() => toggleRest('fibre')}>
-                <strong>¼ plate · Fibre</strong> — lentils, chickpeas, beans (small portion only on rest days).
-              </PlateCopyLine>
-              <p className="plate-copy-line plate-copy-line--static plate-copy-line--drizzle">
-                <strong>+ Drizzle</strong> — 1 tbsp EVOO or ½ avocado.
-              </p>
-            </div>
-          </div>
-        </article>
+      <PlateMealBuilder
+        phaseKcal={kcal}
+        phaseKcalNote={kcalNote}
+        targetProtein={personal.protein}
+        baseline={baseline}
+      />
 
-        <article className="plate-template-card plate-template-card--clay plate-template-card--split">
-          <header className="plate-template-card__head">
-            <h3>Training-day plate</h3>
-            <span className="plate-template-card__tag">Interactive</span>
-          </header>
-          <div className="plate-split-body">
-            <div className="plate-split-media">
-              <TrainingDayPlateSvg interactive activeSlot={trainSlot} onSlotSelect={toggleTrain} />
-              <span className="plate-split-hint">Tap a wedge</span>
-            </div>
-            <div className="plate-split-copy plate-copy">
-              <PlateCopyLine<TrainingDaySlot> slot="veg" active={trainSlot} onPick={() => toggleTrain('veg')}>
-                <strong>½ plate · Vegetables</strong> — same as rest day.
-              </PlateCopyLine>
-              <PlateCopyLine<TrainingDaySlot> slot="protein" active={trainSlot} onPick={() => toggleTrain('protein')}>
-                <strong>¼ plate · Lean protein</strong> — slightly larger portion (+10g) around training.
-              </PlateCopyLine>
-              <PlateCopyLine<TrainingDaySlot> slot="carbs" active={trainSlot} onPick={() => toggleTrain('carbs')}>
-                <strong className="text-clay">¼ plate · Slow carbs</strong> — green plantain, sweet potato, lentils,
-                teff, sorghum, fonio, quinoa, pearled barley. Cook then cool for resistant starch.
-              </PlateCopyLine>
-              <p className="plate-copy-line plate-copy-line--static plate-copy-line--drizzle">
-                <strong>+ Drizzle</strong> — 1 tbsp EVOO.
-              </p>
-            </div>
-          </div>
-        </article>
+      <details className="plate-page-reference">
+        <summary className="plate-page-reference__summary">
+          <span className="plate-page-reference__summary-title">Swaps & scenarios</span>
+          <span className="plate-page-reference__summary-hint muted">Optional.</span>
+        </summary>
 
-        <article className="plate-template-card plate-template-card--plum plate-template-card--split">
-          <header className="plate-template-card__head">
-            <h3>Soup-meal bowl</h3>
-            <span className="plate-template-card__tag plate-template-card__tag--plum">Interactive</span>
+        <div className="card plate-swaps-card plate-page-reference__card">
+          <header className="plate-swaps-card__head">
+            <h2 className="section-h section-h--flush">African ↔ Western</h2>
+            <p className="plate-lead">
+              More ideas: <Link to="/swaps">Food Swaps</Link>.
+            </p>
           </header>
-          <div className="plate-split-body">
-            <div className="plate-split-media">
-              <SoupBowlSvg interactive activeSlot={soupSlot} onSlotSelect={toggleSoup} />
-              <span className="plate-split-hint">Tap a layer</span>
-            </div>
-            <div className="plate-split-copy plate-copy">
-              <PlateCopyLine<SoupBowlSlot> slot="base" active={soupSlot} onPick={() => toggleSoup('base')}>
-                <strong>Base</strong> — pepper soup or ogbono / okra / efo riro / edikang ikong.
-              </PlateCopyLine>
-              <PlateCopyLine<SoupBowlSlot> slot="protein" active={soupSlot} onPick={() => toggleSoup('protein')}>
-                <strong>Protein anchor</strong> — stockfish, tilapia, catfish, chicken, eggs, or boiled goat.
-              </PlateCopyLine>
-              <PlateCopyLine<SoupBowlSlot> slot="leafy" active={soupSlot} onPick={() => toggleSoup('leafy')}>
-                <strong>Leafy volume</strong> — ugu, ewedu, waterleaf, bitter leaf, amaranth.
-              </PlateCopyLine>
-              <PlateCopyLine<SoupBowlSlot> slot="aromatics" active={soupSlot} onPick={() => toggleSoup('aromatics')}>
-                <strong>Aromatics</strong> — uziza, scotch bonnet, dawadawa, ginger, garlic, crayfish.
-              </PlateCopyLine>
-              <PlateCopyLine<SoupBowlSlot> slot="optional" active={soupSlot} onPick={() => toggleSoup('optional')}>
-                <strong>Optional</strong> — small green plantain on training days.
-              </PlateCopyLine>
-            </div>
-          </div>
-        </article>
-      </div>
 
-      <div className="card plate-swaps-card">
-        <h2 className="section-h section-h--flush">African ↔ Western swaps</h2>
-        <p className="plate-lead">
-          Same plate template, different cuisines. The mechanism is the structure, not the specific food. For
-          mechanism-graded substitutions across drinks, carbs, snacks, oils, and more, see{' '}
-          <Link to="/swaps">Food Swaps</Link>.
-        </p>
-        <div className="swap-table-wrap">
-          <table className="swap-table">
-            <thead>
-              <tr>
-                <th>Plate slot</th>
-                <th>Western default</th>
-                <th>African swap</th>
-                <th>Why they&apos;re equivalent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PLATE_SWAPS.map((row) => (
-                <tr key={row.slot}>
-                  <td className="swap-slot">{row.slot}</td>
-                  <td>{row.western}</td>
-                  <td className="swap-african">{row.african}</td>
-                  <td className="swap-why">{row.why}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="plate-swap-sections">
+            {PLATE_SWAP_SECTIONS.map((section) => (
+              <section
+                key={section.id}
+                className={`plate-swap-group plate-swap-group--accent-${section.accent}`}
+                aria-labelledby={`plate-swap-h-${section.id}`}
+              >
+                <header className="plate-swap-group__head">
+                  <h3 className="plate-swap-group__title" id={`plate-swap-h-${section.id}`}>
+                    {section.title}
+                  </h3>
+                  <p className="plate-swap-group__lead">{section.lead}</p>
+                </header>
+                <div className="plate-swap-grid">
+                  {section.rows.map((row) => (
+                    <article
+                      key={`${section.id}-${row.slot}`}
+                      className={`plate-swap-tile plate-swap-tile--accent-${section.accent}`}
+                    >
+                      <div className="plate-swap-tile__slot">{row.slot}</div>
+                      <div className="plate-swap-tile__pair">
+                        <div className="plate-swap-tile__half plate-swap-tile__half--western">
+                          <span className="plate-swap-tile__label">Western</span>
+                          <p className="plate-swap-tile__value">{row.western}</p>
+                        </div>
+                        <div className="plate-swap-tile__bridge" aria-hidden>
+                          <span className="plate-swap-tile__bridge-line" />
+                          <span className="plate-swap-tile__bridge-icon">↔</span>
+                          <span className="plate-swap-tile__bridge-line" />
+                        </div>
+                        <div className="plate-swap-tile__half plate-swap-tile__half--african">
+                          <span className="plate-swap-tile__label">African</span>
+                          <p className="plate-swap-tile__value">{row.african}</p>
+                        </div>
+                      </div>
+                      <div className="plate-swap-tile__why">
+                        <span className="plate-swap-tile__why-kicker">Same role</span>
+                        <span className="plate-swap-tile__why-text">{row.why}</span>
+                      </div>
+                      <div className="plate-swap-tile__actions">
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm plate-swap-tile__action"
+                          aria-label={`Add Western pick for ${row.slot} to the current plate`}
+                          onClick={() => appendSwapVariant(row, 'western')}
+                        >
+                          Add Western
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm plate-swap-tile__action"
+                          aria-label={`Add African pick for ${row.slot} to the current plate`}
+                          onClick={() => appendSwapVariant(row, 'african')}
+                        >
+                          Add African
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="card plate-scenarios-card">
-        <h3>Quick-pick by scenario</h3>
-        <div className="plate-scenarios-grid">
-          {PLATE_SCENARIOS.map((s) => (
-            <div key={s.title} className="plate-scenario-tile">
-              <strong>{s.title}</strong>
-              <span>{s.detail}</span>
-            </div>
-          ))}
+        <div className="card plate-scenarios-card plate-page-reference__card">
+          <h3>Scenarios</h3>
+          <p className="plate-scenarios-card__hint muted">
+            Load a full example: switches template (rest, training, or soup), fills each wedge with
+            custom lines, and scrolls you back to the builder. Macros are illustrative — edit
+            portions on the worksheet.
+          </p>
+          <div className="plate-scenarios-grid">
+            {PLATE_SCENARIOS.map((s, i) => (
+              <div key={s.title} className="plate-scenario-tile">
+                <strong>{s.title}</strong>
+                <span>{s.detail}</span>
+                {s.platePreset != null ? (
+                  <div className="plate-scenario-tile__actions">
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      data-testid={`plate-scenario-load-${i}`}
+                      aria-label={`Load scenario ${s.title} onto the plate builder`}
+                      onClick={() => requestScenarioPreset(s.platePreset)}
+                    >
+                      Load on plate
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </details>
+
+      <PlateConfirmDialog
+        open={presetDialog != null}
+        titleId="plate-preset-dialog-title"
+        title="Replace current meal lines?"
+        body={
+          <p>
+            This scenario loads a <strong>template</strong> and <strong>example lines</strong> into
+            the builder. Your current meal lines will be cleared. You can still undo by editing or
+            clearing lines afterward.
+          </p>
+        }
+        confirmLabel="Load scenario"
+        confirmTestId="plate-preset-confirm"
+        onCancel={() => setPresetDialog(null)}
+        onConfirm={() => {
+          if (presetDialog) runApplyPreset(presetDialog)
+        }}
+      />
     </section>
   )
 }
