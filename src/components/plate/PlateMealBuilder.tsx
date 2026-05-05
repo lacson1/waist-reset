@@ -25,6 +25,12 @@ import { PlateVisual } from "./builder/PlateVisual";
 import { PlateWedgeContext } from "./builder/PlateWedgeContext";
 
 const PLATE_COLLAPSIBLE_HINT_KEY = "vat_plate_collapsible_hint_v1";
+const PLATE_TOUR_DISMISSED_KEY = "vat_plate_builder_tour_v1";
+
+type BuilderSnapshot = Pick<
+  ReturnType<typeof usePlateBuilderStore.getState>,
+  "template" | "healthFocus" | "activeSlot" | "items"
+>;
 
 /** Safari Private mode and some embedded webviews throw on storage access. */
 function readHintDismissed(): boolean {
@@ -43,6 +49,38 @@ function persistHintDismissed(): void {
   } catch {
     /* storage unavailable — hint just reappears next session */
   }
+}
+
+function readTourDismissed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(PLATE_TOUR_DISMISSED_KEY) != null;
+  } catch {
+    return false;
+  }
+}
+
+function persistTourDismissed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(PLATE_TOUR_DISMISSED_KEY, "1");
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function captureBuilderSnapshot(): BuilderSnapshot {
+  const st = usePlateBuilderStore.getState();
+  return {
+    template: st.template,
+    healthFocus: st.healthFocus,
+    activeSlot: st.activeSlot,
+    items: st.items,
+  };
+}
+
+function restoreBuilderSnapshot(snapshot: BuilderSnapshot): void {
+  usePlateBuilderStore.setState(snapshot);
 }
 
 function sanitizeBuilderState() {
@@ -92,8 +130,19 @@ export function PlateMealBuilder({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [savedMealBanner, setSavedMealBanner] = useState<string | null>(null);
   const [addedLineBanner, setAddedLineBanner] = useState<string | null>(null);
+  const [undoBanner, setUndoBanner] = useState<{
+    message: string;
+    snapshot: BuilderSnapshot;
+  } | null>(null);
   const [showCollapsibleHint, setShowCollapsibleHint] = useState(
     () => !readHintDismissed(),
+  );
+  const [tourStep, setTourStep] = useState(0);
+  const [showTour, setShowTour] = useState(() => !readTourDismissed());
+  const [templateTouched, setTemplateTouched] = useState(false);
+  const [wedgeTouched, setWedgeTouched] = useState(false);
+  const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(
+    null,
   );
 
   useEffect(() => {
@@ -108,6 +157,12 @@ export function PlateMealBuilder({
     return () => window.clearTimeout(t);
   }, [addedLineBanner]);
 
+  useEffect(() => {
+    if (!undoBanner) return;
+    const t = window.setTimeout(() => setUndoBanner(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [undoBanner]);
+
   const handleSaveToToday = useCallback(() => {
     if (items.length === 0) return;
     const entry = useMealLogStore.getState().saveMeal({
@@ -116,13 +171,31 @@ export function PlateMealBuilder({
       healthFocus,
       items,
     });
+    setLastSavedSignature(
+      JSON.stringify({
+        template,
+        healthFocus,
+        activeSlot,
+        items: items.map((it) => ({
+          id: it.id,
+          slot: it.slot,
+          source: it.source,
+          portion: it.portion,
+          food: it.foodSnapshot
+            ? { n: it.foodSnapshot.n }
+            : null,
+          custom: it.custom,
+        })),
+      }),
+    );
     setSavedMealBanner(`Saved to today — ${entry.label}.`);
-  }, [healthFocus, items, template]);
+  }, [activeSlot, healthFocus, items, template]);
 
   const handleTemplatePick = useCallback(
     (next: MealTemplate) => {
       if (next === template) return;
       setTemplate(next);
+      setTemplateTouched(true);
     },
     [setTemplate, template],
   );
@@ -134,7 +207,12 @@ export function PlateMealBuilder({
 
   const openResetDialog = useCallback(() => setResetDialogOpen(true), []);
   const confirmResetDialog = useCallback(() => {
+    const snapshot = captureBuilderSnapshot();
     resetBuilder();
+    setUndoBanner({
+      message: "Builder reset. Undo?",
+      snapshot,
+    });
     setResetDialogOpen(false);
   }, [resetBuilder]);
 
@@ -155,6 +233,27 @@ export function PlateMealBuilder({
     return unsub;
   }, []);
 
+  useEffect(() => {
+    if (lastSavedSignature != null) return;
+    setLastSavedSignature(
+      JSON.stringify({
+        template,
+        healthFocus,
+        activeSlot,
+        items: items.map((it) => ({
+          id: it.id,
+          slot: it.slot,
+          source: it.source,
+          portion: it.portion,
+          food: it.foodSnapshot
+            ? { n: it.foodSnapshot.n }
+            : null,
+          custom: it.custom,
+        })),
+      }),
+    );
+  }, [activeSlot, healthFocus, items, lastSavedSignature, template]);
+
   const totals = useMemo(() => sumMacros(items), [items]);
   const compare = useMemo(
     () => compareToPhase(totals, phaseKcal, targetProtein),
@@ -168,6 +267,119 @@ export function PlateMealBuilder({
   const activeWedgeLabel = useMemo(
     () => slotLabel(template, activeSlot),
     [template, activeSlot],
+  );
+
+  const currentSignature = useMemo(
+    () =>
+      JSON.stringify({
+        template,
+        healthFocus,
+        activeSlot,
+        items: items.map((it) => ({
+          id: it.id,
+          slot: it.slot,
+          source: it.source,
+          portion: it.portion,
+          food: it.foodSnapshot
+            ? { n: it.foodSnapshot.n }
+            : null,
+          custom: it.custom,
+        })),
+      }),
+    [activeSlot, healthFocus, items, template],
+  );
+
+  const isDirty = lastSavedSignature != null && currentSignature !== lastSavedSignature;
+
+  const handleClearWithUndo = useCallback(() => {
+    if (items.length === 0) return;
+    const snapshot = captureBuilderSnapshot();
+    clearItems();
+    setUndoBanner({
+      message: "Meal lines cleared. Undo?",
+      snapshot,
+    });
+  }, [clearItems, items.length]);
+
+  const handleUndo = useCallback(() => {
+    if (!undoBanner) return;
+    restoreBuilderSnapshot(undoBanner.snapshot);
+    setUndoBanner(null);
+  }, [undoBanner]);
+
+  const completion = useMemo(
+    () => ({
+      template: templateTouched || template !== "rest",
+      wedge: wedgeTouched || activeSlot !== DEFAULT_ACTIVE_SLOT[template],
+      lines: items.length > 0,
+    }),
+    [activeSlot, items.length, template, templateTouched, wedgeTouched],
+  );
+
+  const saveStateLabel =
+    items.length === 0
+      ? "No meal lines yet"
+      : isDirty
+      ? "Unsaved changes"
+      : "Saved";
+  const saveStateTone: "saved" | "unsaved" | "idle" =
+    items.length === 0 ? "idle" : isDirty ? "unsaved" : "saved";
+
+  const handleTourNext = useCallback(() => {
+    setTourStep((prev) => {
+      if (prev >= 2) {
+        persistTourDismissed();
+        setShowTour(false);
+        return prev;
+      }
+      return prev + 1;
+    });
+  }, []);
+
+  const handleTourDismiss = useCallback(() => {
+    persistTourDismissed();
+    setShowTour(false);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const inEditable =
+        !!target &&
+        (target.closest("input, textarea, select, [contenteditable='true']") != null ||
+          target.isContentEditable);
+      if (inEditable || event.metaKey || event.ctrlKey || event.altKey) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "s") {
+        event.preventDefault();
+        if (items.length > 0) handleSaveToToday();
+        return;
+      }
+      if (key === "c") {
+        event.preventDefault();
+        handleClearWithUndo();
+        return;
+      }
+      if (event.key === "/") {
+        event.preventDefault();
+        const foodsToggle = document.querySelector<HTMLButtonElement>(
+          '[data-testid="meal-db-toggle"]',
+        );
+        foodsToggle?.focus();
+        foodsToggle?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleClearWithUndo, handleSaveToToday, items.length]);
+
+  const handleSelectSlot = useCallback(
+    (slot: MealSlot) => {
+      setActiveSlot(slot);
+      setWedgeTouched(true);
+    },
+    [setActiveSlot],
   );
 
   const handleAddFoodLine = useCallback(
@@ -197,6 +409,13 @@ export function PlateMealBuilder({
         onDismissHint={dismissCollapsibleHint}
         savedMealBanner={savedMealBanner}
         addedLineBanner={addedLineBanner}
+        saveStateLabel={saveStateLabel}
+        saveStateTone={saveStateTone}
+        completion={completion}
+        showTour={showTour}
+        tourStep={tourStep}
+        onTourNext={handleTourNext}
+        onTourDismiss={handleTourDismiss}
       />
 
       <PlateTemplatePicker template={template} onPick={handleTemplatePick} />
@@ -207,7 +426,7 @@ export function PlateMealBuilder({
         template={template}
         activeSlot={activeSlot}
         items={items}
-        onSelectSlot={setActiveSlot}
+        onSelectSlot={handleSelectSlot}
       />
 
       <h3
@@ -238,10 +457,10 @@ export function PlateMealBuilder({
           items={items}
           onSetPortion={onPortionSlider}
           onRemove={removeItem}
-          onClear={clearItems}
+          onClear={handleClearWithUndo}
           onResetAll={openResetDialog}
           onSaveToToday={handleSaveToToday}
-          onJumpToSlot={setActiveSlot}
+          onJumpToSlot={handleSelectSlot}
         />
 
         <PlateMealTotals
@@ -262,6 +481,31 @@ export function PlateMealBuilder({
         targetProtein={targetProtein}
         onAddCustomItem={addCustomItem}
       />
+
+      {undoBanner && (
+        <div className="plate-meal-builder__undo-bar" role="status">
+          <span>{undoBanner.message}</span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={handleUndo}>
+            Undo
+          </button>
+        </div>
+      )}
+
+      {items.length > 0 ? (
+        <div className="plate-meal-builder__global-mobile-savebar" aria-label="Sticky meal actions">
+          <button
+            type="button"
+            className="btn"
+            data-testid="meal-save-to-today-global-mobile"
+            onClick={handleSaveToToday}
+          >
+            Save
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={handleClearWithUndo}>
+            Clear
+          </button>
+        </div>
+      ) : null}
 
       <PlateConfirmDialog
         open={resetDialogOpen}

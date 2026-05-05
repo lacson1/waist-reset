@@ -53,9 +53,12 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
     <svg
       viewBox="0 0 200 200"
       className="plate-svg plate-svg--training"
-      role={interactive ? 'group' : undefined}
-      aria-hidden={interactive ? undefined : true}
-      aria-label={interactive ? 'Training-day plate — tap a wedge or matching bullet' : undefined}
+      {...(interactive
+        ? {
+            role: 'group' as const,
+            'aria-label': 'Training-day plate — tap a wedge or matching bullet',
+          }
+        : { 'aria-hidden': true })}
     >
       <defs>
         <linearGradient id={g('rim')} x1="12%" y1="8%" x2="88%" y2="96%">
@@ -83,6 +86,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
         <filter id={g('plate-drop')} x="-45%" y="-45%" width="190%" height="190%">
           <feDropShadow dx="0" dy="10" stdDeviation="8.5" floodColor="#1a2430" floodOpacity="0.18" />
         </filter>
+        {/* Same geometry as wedge paths — keeps titles + picks inside each zone */}
         <clipPath id={g('clip-veg')}>
           <path d="M 100 100 L 100 8 A 92 92 0 0 1 100 192 Z" />
         </clipPath>

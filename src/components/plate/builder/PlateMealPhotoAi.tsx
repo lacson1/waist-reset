@@ -182,7 +182,7 @@ export function PlateMealPhotoAi({
           <IconPhotoEstimate />
         </span>
         <span className="plate-meal-builder__ai-summary-text">
-          <span className="plate-meal-builder__ai-summary-title">Photo estimate</span>
+          <span className="plate-meal-builder__ai-summary-title">Photo estimate (advanced)</span>
           <span className="plate-meal-builder__ai-summary-sub muted">
             Attach a photo · key stays in a private step
           </span>

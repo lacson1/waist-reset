@@ -269,7 +269,7 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
             tabIndex={0}
             role="button"
             aria-label={
-              slot === 'base'
+              `${slot === 'base'
                 ? 'Base layer'
                 : slot === 'protein'
                   ? 'Protein anchor'
@@ -277,9 +277,8 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
                     ? 'Leafy volume'
                     : slot === 'aromatics'
                       ? 'Aromatics'
-                      : 'Optional add-on'
+                      : 'Optional add-on'}${activeSlot === slot ? ', selected' : ''}`
             }
-            aria-pressed={activeSlot === slot}
             onClick={() => pick(slot)}
             onKeyDown={(e) => onKey(e, slot)}
           />

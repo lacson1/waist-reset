@@ -128,10 +128,9 @@ export function PlateMealLines({
           <div className="plate-meal-builder__lines-title-block">
             <h4 className="plate-meal-builder__tools-section-title">Meal lines</h4>
             <p className="plate-meal-builder__lines-sub muted">
-              Sliders apply to this meal only. Tap a row to fold portion and remove.{' '}
-              <strong className="plate-meal-builder__lines-sub-strong">Close</strong> hides this
-              section; your lines stay until you clear or reset. When closed, look for the teal
-              Meal lines strip — tap it to edit or save.
+              Sliders apply to this meal only. Tap row to fold portion + remove.{' '}
+              <strong className="plate-meal-builder__lines-sub-strong">Close</strong> hides section;
+              lines stay until clear/reset. Reopen teal Meal lines strip to edit or save.
             </p>
           </div>
           <div className="plate-meal-builder__lines-actions">
@@ -339,6 +338,7 @@ export function PlateMealLines({
           )}
         </div>
       </div>
+
     </div>
   )
 }

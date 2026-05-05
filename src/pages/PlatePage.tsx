@@ -11,6 +11,10 @@ import { PlateMealBuilder } from '../components/plate/PlateMealBuilder'
 import { PlateConfirmDialog } from '../components/plate/builder/PlateConfirmDialog'
 
 const MEAL_TEMPLATES: MealTemplate[] = ['rest', 'training', 'soup']
+type PlateSnapshot = Pick<
+  ReturnType<typeof usePlateBuilderStore.getState>,
+  'template' | 'healthFocus' | 'activeSlot' | 'items'
+>
 
 function mealTemplateFromQuery(raw: string | null): MealTemplate | null {
   if (raw == null || raw === '') return null
@@ -37,7 +41,13 @@ export function PlatePage() {
   const addCustomItem = usePlateBuilderStore((s) => s.addCustomItem)
   const applyPlatePreset = usePlateBuilderStore((s) => s.applyPlatePreset)
 
-  const [presetDialog, setPresetDialog] = useState<PlateScenarioPreset | null>(null)
+  const [presetDialog, setPresetDialog] = useState<{ preset: PlateScenarioPreset; title: string } | null>(null)
+  const [pageNotice, setPageNotice] = useState<string | null>(null)
+  const [advancedToolsOpen, setAdvancedToolsOpen] = useState(false)
+  const [scenarioUndo, setScenarioUndo] = useState<{
+    message: string
+    snapshot: PlateSnapshot
+  } | null>(null)
 
   const quickTemplateChoices: ReadonlyArray<{ id: MealTemplate; label: string; hint: string }> = [
     { id: 'rest', label: 'Rest day plate', hint: 'Lower-carb default; emphasizes veg, protein, fibre.' },
@@ -46,22 +56,32 @@ export function PlatePage() {
   ]
 
   const runApplyPreset = useCallback(
-    (preset: PlateScenarioPreset) => {
+    (preset: PlateScenarioPreset, title: string) => {
+      const prevState = usePlateBuilderStore.getState()
+      const snapshot: PlateSnapshot = {
+        template: prevState.template,
+        healthFocus: prevState.healthFocus,
+        activeSlot: prevState.activeSlot,
+        items: prevState.items,
+      }
       applyPlatePreset({ template: preset.template, lines: preset.lines })
+      setPageNotice(`Scenario applied: ${title}.`)
+      setScenarioUndo({ message: `Scenario applied: ${title}.`, snapshot })
       setPresetDialog(null)
+      setAdvancedToolsOpen(false)
       queueMicrotask(() => scrollPlateBuilderIntoView())
     },
     [applyPlatePreset],
   )
 
   const requestScenarioPreset = useCallback(
-    (preset: PlateScenarioPreset | undefined) => {
+    (preset: PlateScenarioPreset | undefined, title: string) => {
       if (!preset) return
       if (plateItemCount > 0) {
-        setPresetDialog(preset)
+        setPresetDialog({ preset, title })
         return
       }
-      runApplyPreset(preset)
+      runApplyPreset(preset, title)
     },
     [plateItemCount, runApplyPreset],
   )
@@ -86,10 +106,40 @@ export function PlatePage() {
   const handleQuickTemplatePick = useCallback(
     (next: MealTemplate) => {
       setTemplate(next)
+      const picked = quickTemplateChoices.find((choice) => choice.id === next)
+      if (picked) setPageNotice(`Template applied: ${picked.label}.`)
       queueMicrotask(() => scrollPlateBuilderIntoView())
     },
-    [setTemplate],
+    [quickTemplateChoices, setTemplate],
   )
+
+  useEffect(() => {
+    if (!pageNotice) return
+    const t = window.setTimeout(() => setPageNotice(null), 2600)
+    return () => window.clearTimeout(t)
+  }, [pageNotice])
+
+  useEffect(() => {
+    if (!scenarioUndo) return
+    const t = window.setTimeout(() => setScenarioUndo(null), 12000)
+    return () => window.clearTimeout(t)
+  }, [scenarioUndo])
+
+  useEffect(() => {
+    if (!advancedToolsOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAdvancedToolsOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [advancedToolsOpen])
+
+  const undoScenarioApply = useCallback(() => {
+    if (!scenarioUndo) return
+    usePlateBuilderStore.setState(scenarioUndo.snapshot)
+    setScenarioUndo(null)
+    setPageNotice('Scenario undone.')
+  }, [scenarioUndo])
 
   useEffect(() => {
     const t = mealTemplateFromQuery(searchParams.get('template'))
@@ -133,20 +183,37 @@ export function PlatePage() {
         </button>
         <button
           type="button"
-          className="btn btn-ghost"
-          onClick={() => requestScenarioPreset(PLATE_SCENARIOS[0]?.platePreset)}
+          className="btn btn-ghost plate-page-actions__secondary"
+          onClick={() => requestScenarioPreset(PLATE_SCENARIOS[0]?.platePreset, PLATE_SCENARIOS[0]?.title ?? 'Starter scenario')}
           aria-label="Load a complete starter scenario onto the builder"
         >
-          Load starter scenario
+          Apply starter scenario
         </button>
       </div>
+      {pageNotice ? (
+        <p className="plate-page-notice" role="status">
+          {pageNotice}
+        </p>
+      ) : null}
+      {scenarioUndo ? (
+        <div className="plate-page-undo" role="status">
+          <span className="plate-page-undo__message">{scenarioUndo.message}</span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm plate-page-undo__action"
+            onClick={undoScenarioApply}
+          >
+            Undo
+          </button>
+        </div>
+      ) : null}
 
       <section className="plate-page-quickstart" aria-labelledby="plate-quickstart-heading">
         <h2 id="plate-quickstart-heading" className="section-h section-h--flush">
           Quick start templates
         </h2>
         <p className="plate-lead">
-          Pick a template first, then add foods to wedges. You can always switch templates later.
+          Pick a template first, then add meal lines to wedges. You can switch templates anytime.
         </p>
         <div className="plate-page-quickstart-grid">
           {quickTemplateChoices.map((choice) => {
@@ -165,9 +232,10 @@ export function PlatePage() {
                   type="button"
                   className="btn btn-ghost btn-sm"
                   onClick={() => handleQuickTemplatePick(choice.id)}
-                  aria-label={`Use ${choice.label}`}
+                  aria-label={`Apply ${choice.label}`}
+                  disabled={active}
                 >
-                  Use template
+                  {active ? 'Applied' : 'Apply template'}
                 </button>
               </article>
             )
@@ -182,13 +250,52 @@ export function PlatePage() {
         baseline={baseline}
       />
 
-      <details className="plate-page-reference">
-        <summary className="plate-page-reference__summary">
-          <span className="plate-page-reference__summary-title">Swaps & scenarios</span>
-          <span className="plate-page-reference__summary-hint muted">Optional.</span>
-        </summary>
+      <section className="plate-page-reference plate-page-reference--launcher" aria-label="Advanced tools">
+        <div className="plate-page-reference__summary">
+          <span className="plate-page-reference__summary-title">Advanced tools</span>
+          <span className="plate-page-reference__summary-hint muted">
+            Optional swaps, scenarios, and pantry ideas.
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm plate-page-reference__open-btn"
+            onClick={() => setAdvancedToolsOpen(true)}
+          >
+            Open advanced tools
+          </button>
+        </div>
+      </section>
 
-        <div className="card plate-swaps-card plate-page-reference__card">
+      {advancedToolsOpen ? (
+        <div
+          className="plate-meal-builder__backdrop"
+          role="presentation"
+          onClick={() => setAdvancedToolsOpen(false)}
+        >
+          <div
+            className="plate-meal-builder__dialog plate-page-advanced-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plate-advanced-tools-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="plate-page-advanced-dialog__head">
+              <h2 id="plate-advanced-tools-title" className="section-h section-h--flush">
+                Advanced tools
+              </h2>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setAdvancedToolsOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <p className="plate-lead muted">
+              Optional pantry swaps and scenario presets. Apply when you need inspiration.
+            </p>
+
+            <div className="card plate-swaps-card plate-page-reference__card">
           <header className="plate-swaps-card__head">
             <h2 className="section-h section-h--flush">African ↔ Western</h2>
             <p className="plate-lead">
@@ -259,12 +366,12 @@ export function PlatePage() {
               </section>
             ))}
           </div>
-        </div>
+            </div>
 
-        <div className="card plate-scenarios-card plate-page-reference__card">
+            <div className="card plate-scenarios-card plate-page-reference__card">
           <h3>Scenarios</h3>
           <p className="plate-scenarios-card__hint muted">
-            Load a full example: switches template (rest, training, or soup), fills each wedge with
+            Apply a full example: switches template (rest, training, or soup), fills each wedge with
             custom lines, and scrolls you back to the builder. Macros are illustrative — edit
             portions on the worksheet.
           </p>
@@ -280,17 +387,19 @@ export function PlatePage() {
                       className="btn btn-sm"
                       data-testid={`plate-scenario-load-${i}`}
                       aria-label={`Load scenario ${s.title} onto the plate builder`}
-                      onClick={() => requestScenarioPreset(s.platePreset)}
+                      onClick={() => requestScenarioPreset(s.platePreset, s.title)}
                     >
-                      Load on plate
+                      Apply scenario
                     </button>
                   </div>
                 ) : null}
               </div>
             ))}
           </div>
+            </div>
+          </div>
         </div>
-      </details>
+      ) : null}
 
       <PlateConfirmDialog
         open={presetDialog != null}
@@ -298,16 +407,16 @@ export function PlatePage() {
         title="Replace current meal lines?"
         body={
           <p>
-            This scenario loads a <strong>template</strong> and <strong>example lines</strong> into
+            This scenario applies a <strong>template</strong> and <strong>example lines</strong> into
             the builder. Your current meal lines will be cleared. You can still undo by editing or
             clearing lines afterward.
           </p>
         }
-        confirmLabel="Load scenario"
+        confirmLabel="Apply scenario"
         confirmTestId="plate-preset-confirm"
         onCancel={() => setPresetDialog(null)}
         onConfirm={() => {
-          if (presetDialog) runApplyPreset(presetDialog)
+          if (presetDialog) runApplyPreset(presetDialog.preset, presetDialog.title)
         }}
       />
     </section>

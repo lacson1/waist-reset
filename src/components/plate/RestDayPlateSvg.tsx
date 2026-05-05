@@ -54,9 +54,12 @@ export function RestDayPlateSvg({ activeSlot, interactive, onSlotSelect, slotPic
     <svg
       viewBox="0 0 200 200"
       className="plate-svg plate-svg--rest"
-      role={interactive ? 'group' : undefined}
-      aria-hidden={interactive ? undefined : true}
-      aria-label={interactive ? 'Rest-day plate — tap a wedge or matching bullet' : undefined}
+      {...(interactive
+        ? {
+            role: 'group' as const,
+            'aria-label': 'Rest-day plate — tap a wedge or matching bullet',
+          }
+        : { 'aria-hidden': true })}
     >
       <defs>
         <linearGradient id={g('rim')} x1="12%" y1="8%" x2="88%" y2="96%">

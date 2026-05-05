@@ -3,6 +3,17 @@ type Props = {
   onDismissHint: () => void
   savedMealBanner: string | null
   addedLineBanner: string | null
+  saveStateLabel: string
+  saveStateTone: 'saved' | 'unsaved' | 'idle'
+  completion: {
+    template: boolean
+    wedge: boolean
+    lines: boolean
+  }
+  showTour: boolean
+  tourStep: number
+  onTourNext: () => void
+  onTourDismiss: () => void
 }
 
 /**
@@ -16,16 +27,65 @@ export function PlateMealBuilderIntro({
   onDismissHint,
   savedMealBanner,
   addedLineBanner,
+  saveStateLabel,
+  saveStateTone,
+  completion,
+  showTour,
+  tourStep,
+  onTourNext,
+  onTourDismiss,
 }: Props) {
+  const tourSteps = [
+    'Step 1: Pick a template to shape your plate.',
+    'Step 2: Tap a wedge to choose where meal lines go.',
+    'Step 3: Add meal lines, review totals, then save to today.',
+  ]
+
   return (
     <div className="plate-meal-builder__intro">
       <header className="plate-meal-builder__head">
         <div className="eyebrow">Meal</div>
-        <h2 className="section-h section-h--flush">Your plate</h2>
+        <div className="plate-meal-builder__head-row">
+          <h2 className="section-h section-h--flush">Your plate</h2>
+          <span
+            className={`plate-meal-builder__save-state plate-meal-builder__save-state--${saveStateTone}`}
+            role="status"
+          >
+            {saveStateLabel}
+          </span>
+        </div>
         <p className="plate-meal-builder__lead muted">
           Pick a template, choose wedges on the plate, then add lines. Totals are for this meal only.
         </p>
+        <ol className="plate-meal-builder__steps" aria-label="Plate builder steps">
+          <li className={completion.template ? 'is-done' : ''}>
+            <strong>1.</strong> Pick a template
+          </li>
+          <li className={completion.wedge ? 'is-done' : ''}>
+            <strong>2.</strong> Choose a wedge
+          </li>
+          <li className={completion.lines ? 'is-done' : ''}>
+            <strong>3.</strong> Add meal lines and save
+          </li>
+        </ol>
       </header>
+
+      {showTour && (
+        <div className="plate-meal-builder__tour" role="status">
+          <p>{tourSteps[tourStep] ?? tourSteps[0]}</p>
+          <div className="plate-meal-builder__tour-actions">
+            {tourStep < tourSteps.length - 1 ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={onTourNext}>
+                Next tip
+              </button>
+            ) : (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={onTourDismiss}>
+                Got it
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {showCollapsibleHint && (
         <div className="plate-meal-builder__hint-banner" role="status">
