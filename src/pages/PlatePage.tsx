@@ -39,6 +39,12 @@ export function PlatePage() {
 
   const [presetDialog, setPresetDialog] = useState<PlateScenarioPreset | null>(null)
 
+  const quickTemplateChoices: ReadonlyArray<{ id: MealTemplate; label: string; hint: string }> = [
+    { id: 'rest', label: 'Rest day plate', hint: 'Lower-carb default; emphasizes veg, protein, fibre.' },
+    { id: 'training', label: 'Training day plate', hint: 'Adds a slow-carb wedge around training demand.' },
+    { id: 'soup', label: 'Soup bowl', hint: 'Great for batch prep and high-volume satiety meals.' },
+  ]
+
   const runApplyPreset = useCallback(
     (preset: PlateScenarioPreset) => {
       applyPlatePreset({ template: preset.template, lines: preset.lines })
@@ -77,6 +83,14 @@ export function PlatePage() {
     [addCustomItem, plateTemplate, setActiveSlot],
   )
 
+  const handleQuickTemplatePick = useCallback(
+    (next: MealTemplate) => {
+      setTemplate(next)
+      queueMicrotask(() => scrollPlateBuilderIntoView())
+    },
+    [setTemplate],
+  )
+
   useEffect(() => {
     const t = mealTemplateFromQuery(searchParams.get('template'))
     if (t == null) return
@@ -107,6 +121,59 @@ export function PlatePage() {
           </div>
         )}
       </div>
+
+      <div className="plate-page-actions" role="group" aria-label="Plate page quick actions">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => scrollPlateBuilderIntoView()}
+          aria-label="Jump to meal builder"
+        >
+          Build now
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => requestScenarioPreset(PLATE_SCENARIOS[0]?.platePreset)}
+          aria-label="Load a complete starter scenario onto the builder"
+        >
+          Load starter scenario
+        </button>
+      </div>
+
+      <section className="plate-page-quickstart" aria-labelledby="plate-quickstart-heading">
+        <h2 id="plate-quickstart-heading" className="section-h section-h--flush">
+          Quick start templates
+        </h2>
+        <p className="plate-lead">
+          Pick a template first, then add foods to wedges. You can always switch templates later.
+        </p>
+        <div className="plate-page-quickstart-grid">
+          {quickTemplateChoices.map((choice) => {
+            const active = plateTemplate === choice.id
+            return (
+              <article
+                key={choice.id}
+                className={`plate-page-quickstart-tile${active ? ' is-active' : ''}`}
+              >
+                <div className="plate-page-quickstart-tile__head">
+                  <strong>{choice.label}</strong>
+                  {active ? <span className="chip teal">Current</span> : null}
+                </div>
+                <p className="muted">{choice.hint}</p>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => handleQuickTemplatePick(choice.id)}
+                  aria-label={`Use ${choice.label}`}
+                >
+                  Use template
+                </button>
+              </article>
+            )
+          })}
+        </div>
+      </section>
 
       <PlateMealBuilder
         phaseKcal={kcal}

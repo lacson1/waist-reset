@@ -8,9 +8,8 @@ export function StartPage() {
           <div className="eyebrow">Welcome</div>
           <h1>Start here.</h1>
           <div className="topbar-sub">
-            A structured eating system focused on waist circumference, blood-sugar markers, and a pattern you
-            can sustain. This React build keeps your data in the browser (with optional backup) and works
-            offline after the first load.
+            A structured eating system focused on waist and blood-sugar markers. Data stays in your browser
+            and works offline after first load.
           </div>
         </div>
       </div>

@@ -10,19 +10,52 @@ const PLATE_TEMPLATE_HINT: Record<NonNullable<TimelineEntry['plateTemplate']>, s
   soup: 'Soup bowl (base · protein · leafy · aromatics)',
 }
 
+type RowKind = 'meal' | 'prep' | 'supplement' | 'fast'
+
+function rowKindForEntry(e: TimelineEntry): RowKind {
+  if (e.label.toLowerCase().includes('fast')) return 'fast'
+  if (e.plateTemplate || e.kcal >= 250) return 'meal'
+  if (e.kcal === 0) return 'supplement'
+  return 'prep'
+}
+
+function rowKindLabel(kind: RowKind): string {
+  switch (kind) {
+    case 'meal':
+      return 'Meal'
+    case 'prep':
+      return 'Prep'
+    case 'supplement':
+      return 'Supplement'
+    default:
+      return 'Fast'
+  }
+}
+
 function TimelineRow({ e }: { e: TimelineEntry }) {
+  const [showWhy, setShowWhy] = useState(false)
+  const kind = rowKindForEntry(e)
+  const showKcal = e.kcal >= 150
   return (
-    <div className={`timeline-row timeline-row--${e.state}`}>
+    <div className={`timeline-row timeline-row--${e.state}${e.plateTemplate ? ' timeline-row--major' : ''}`}>
       <div className="timeline-time">{e.time}</div>
       <div className="timeline-body">
-        <div className="timeline-label">{e.label}</div>
+        <div className="timeline-label-row">
+          <div className="timeline-label">{e.label}</div>
+          <span className={`timeline-kind timeline-kind--${kind}`}>{rowKindLabel(kind)}</span>
+        </div>
         <div className="timeline-detail">{e.detail}</div>
-        <div className="timeline-mech">{e.mech}</div>
-        {e.kcal > 0 && <div className="timeline-kcal">~{e.kcal} kcal</div>}
+        <div className="timeline-row-meta">
+          {showKcal && <div className="timeline-kcal">~{e.kcal} kcal</div>}
+          <button type="button" className="timeline-why-toggle" onClick={() => setShowWhy((v) => !v)}>
+            {showWhy ? 'Hide why' : 'Why'}
+          </button>
+        </div>
+        {showWhy && <div className="timeline-mech">{e.mech}</div>}
         {e.plateTemplate && (
           <div className="timeline-plate-link">
             <Link to={`/plate?template=${e.plateTemplate}`} className="timeline-plate-link__a">
-              Plate builder · {PLATE_TEMPLATE_HINT[e.plateTemplate]}
+              Open plate · {PLATE_TEMPLATE_HINT[e.plateTemplate]}
             </Link>
           </div>
         )}
@@ -40,6 +73,14 @@ export function DailyPage() {
   const personal = useMemo(() => computePersonal(baseline), [baseline])
   const kcal = phaseKcal(phase, baseline)
   const kcalNote = phaseKcalNote(phase)
+  const anchors = useMemo(() => {
+    const open = rows.find((r) => r.state === 'fed')
+    const close = [...rows].reverse().find((r) => r.label.toLowerCase().includes('fast begins'))
+    const main = [...rows]
+      .filter((r) => r.kcal >= 250)
+      .sort((a, b) => b.kcal - a.kcal)[0]
+    return { open, main, close }
+  }, [rows])
 
   return (
     <section className="view active">
@@ -48,9 +89,8 @@ export function DailyPage() {
           <div className="eyebrow">Structure</div>
           <h1>Daily plan</h1>
           <div className="topbar-sub">
-            Example eating windows and anchors for General Mediterranean vs African-Mediterranean emphasis. Pair with{' '}
-            <Link to="/today">Today</Link> for your checklist and{' '}
-            <Link to="/plate">Plate System</Link> to model each main eating block.
+            Use this as your readable day flow. Keep actions simple, then use <Link to="/today">Today</Link> to log and{' '}
+            <Link to="/plate">Plate System</Link> to build meals.
           </div>
         </div>
       </div>
@@ -71,6 +111,15 @@ export function DailyPage() {
           </p>
         </div>
       )}
+
+      <div className="card daily-anchors-card">
+        <div className="daily-strip-title">Today&apos;s anchors</div>
+        <div className="daily-strip-chips">
+          {anchors.open && <span className="chip">Open: {anchors.open.time}</span>}
+          {anchors.main && <span className="chip gold">Main meal: {anchors.main.time}</span>}
+          {anchors.close && <span className="chip clay">Close: {anchors.close.time}</span>}
+        </div>
+      </div>
 
       <div className="sub-tabs" role="tablist">
         <button

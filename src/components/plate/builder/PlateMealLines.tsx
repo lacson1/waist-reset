@@ -184,7 +184,12 @@ export function PlateMealLines({
 
         <div className="plate-meal-builder__lines-worksheet-panel">
           {items.length === 0 ? (
-            <p className="muted">Empty.</p>
+            <div className="plate-meal-builder__empty-state" role="status" aria-live="polite">
+              <p className="muted">
+                No lines yet. Pick your active wedge, open Foods, then tap <strong>+</strong> to add
+                the first item.
+              </p>
+            </div>
           ) : (
             <div className="plate-meal-builder__line-groups">
               {groupedBySlot.map((group) => (

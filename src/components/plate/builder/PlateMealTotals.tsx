@@ -32,6 +32,10 @@ export function PlateMealTotals({
   onFocusChange,
   focusLines,
 }: Props) {
+  const macroTotalKcal = totals.p * 4 + totals.f * 9 + totals.c * 4
+  const proteinPct = macroTotalKcal > 0 ? Math.round((totals.p * 4 * 100) / macroTotalKcal) : 0
+  const fatPct = macroTotalKcal > 0 ? Math.round((totals.f * 9 * 100) / macroTotalKcal) : 0
+  const carbsPct = macroTotalKcal > 0 ? Math.max(0, 100 - proteinPct - fatPct) : 0
   const focusTheme = healthFocusTheme(healthFocus)
   const [focusPickerOpen, setFocusPickerOpen] = useState(false)
   const focusSectionRef = useRef<HTMLDivElement>(null)
@@ -81,7 +85,6 @@ export function PlateMealTotals({
             <button
               type="button"
               className={`plate-meal-builder__focus-toggle plate-meal-builder__focus-toggle--minimal${focusPickerOpen ? ' is-open' : ''}`}
-              aria-expanded={focusPickerOpen}
               aria-controls="plate-meal-builder-focus-panel"
               aria-label={`Totals lens: ${meta.label}. ${focusPickerOpen ? 'Close options' : 'Change how totals are read'}`}
               title={meta.hint}
@@ -148,6 +151,41 @@ export function PlateMealTotals({
           {targetProtein != null && (
             <span className="chip teal">~{targetProtein} g protein/day</span>
           )}
+        </div>
+        <div className="plate-meal-builder__macro-share" aria-label="Macro calorie split">
+          <div className="plate-meal-builder__macro-share-labels">
+            <span>P {proteinPct}%</span>
+            <span>F {fatPct}%</span>
+            <span>C {carbsPct}%</span>
+          </div>
+          <svg
+            className="plate-meal-builder__macro-share-bar"
+            viewBox="0 0 100 10"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <rect
+              className="plate-meal-builder__macro-share-segment plate-meal-builder__macro-share-segment--protein"
+              x={0}
+              y={0}
+              width={proteinPct}
+              height={10}
+            />
+            <rect
+              className="plate-meal-builder__macro-share-segment plate-meal-builder__macro-share-segment--fat"
+              x={proteinPct}
+              y={0}
+              width={fatPct}
+              height={10}
+            />
+            <rect
+              className="plate-meal-builder__macro-share-segment plate-meal-builder__macro-share-segment--carbs"
+              x={proteinPct + fatPct}
+              y={0}
+              width={carbsPct}
+              height={10}
+            />
+          </svg>
         </div>
         <ul className="plate-meal-builder__focus-lines">
           {focusLines.map((line, i) => (
