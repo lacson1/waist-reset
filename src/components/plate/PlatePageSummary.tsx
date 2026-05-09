@@ -137,11 +137,6 @@ export function PlatePageSummary({ phaseKcal, targetProtein, onJumpToBuilder, on
               style={{ width: `${kcalSegs.thisMeal}%` }}
             />
           </div>
-          {hasLogged ? (
-            <div className="plate-page-summary__metric-foot muted">
-              {Math.round(dayTotals.kcal)} logged · +{Math.round(mealTotals.kcal)} on plate
-            </div>
-          ) : null}
         </div>
 
         <div
@@ -176,11 +171,6 @@ export function PlatePageSummary({ phaseKcal, targetProtein, onJumpToBuilder, on
               style={{ width: `${proteinSegs.thisMeal}%` }}
             />
           </div>
-          {hasLogged ? (
-            <div className="plate-page-summary__metric-foot muted">
-              {Math.round(dayTotals.p)}g logged · +{Math.round(mealTotals.p)}g on plate
-            </div>
-          ) : null}
         </div>
 
         <div className="plate-page-summary__macros" role="group" aria-label="This plate macros">
@@ -202,6 +192,17 @@ export function PlatePageSummary({ phaseKcal, targetProtein, onJumpToBuilder, on
           {empty ? 'Start building' : 'Edit plate'}
         </button>
       </div>
+
+      {hasLogged ? (
+        <div className="plate-page-summary__foot">
+          <span className="muted">
+            Calories: {Math.round(dayTotals.kcal)} logged · +{Math.round(mealTotals.kcal)} on plate
+          </span>
+          <span className="muted">
+            Protein: {Math.round(dayTotals.p)}g logged · +{Math.round(mealTotals.p)}g on plate
+          </span>
+        </div>
+      ) : null}
 
       <div className="plate-page-summary__slots" role="group" aria-label="Wedge fill">
         <span className="plate-page-summary__slots-label">
