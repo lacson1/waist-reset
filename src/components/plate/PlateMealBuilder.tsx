@@ -13,6 +13,7 @@ import {
   sumMacros,
 } from "../../domain/plateMeal";
 import { usePlateBuilderStore } from "../../store/plateBuilderStore";
+import type { HealthFocus } from "../../domain/plateMeal";
 import { todayIsoDate, useMealLogStore } from "../../store/mealLogStore";
 import { PlateConfirmDialog } from "./builder/PlateConfirmDialog";
 import { PlateMealBuilderIntro } from "./builder/PlateMealBuilderIntro";
@@ -83,6 +84,27 @@ function restoreBuilderSnapshot(snapshot: BuilderSnapshot): void {
   usePlateBuilderStore.setState(snapshot);
 }
 
+function builderSignature(
+  template: MealTemplate,
+  healthFocus: HealthFocus,
+  activeSlot: MealSlot,
+  items: MealLineItem[],
+): string {
+  return JSON.stringify({
+    template,
+    healthFocus,
+    activeSlot,
+    items: items.map((it) => ({
+      id: it.id,
+      slot: it.slot,
+      source: it.source,
+      portion: it.portion,
+      food: it.foodSnapshot ? { n: it.foodSnapshot.n } : null,
+      custom: it.custom,
+    })),
+  });
+}
+
 function sanitizeBuilderState() {
   const st = usePlateBuilderStore.getState();
   const { template, activeSlot, items } = st;
@@ -141,8 +163,13 @@ export function PlateMealBuilder({
   const [showTour, setShowTour] = useState(() => !readTourDismissed());
   const [templateTouched, setTemplateTouched] = useState(false);
   const [wedgeTouched, setWedgeTouched] = useState(false);
-  const [lastSavedSignature, setLastSavedSignature] = useState<string | null>(
-    null,
+  const [lastSavedSignature, setLastSavedSignature] = useState<string>(() =>
+    builderSignature(
+      usePlateBuilderStore.getState().template,
+      usePlateBuilderStore.getState().healthFocus,
+      usePlateBuilderStore.getState().activeSlot,
+      usePlateBuilderStore.getState().items,
+    ),
   );
 
   useEffect(() => {
@@ -172,21 +199,7 @@ export function PlateMealBuilder({
       items,
     });
     setLastSavedSignature(
-      JSON.stringify({
-        template,
-        healthFocus,
-        activeSlot,
-        items: items.map((it) => ({
-          id: it.id,
-          slot: it.slot,
-          source: it.source,
-          portion: it.portion,
-          food: it.foodSnapshot
-            ? { n: it.foodSnapshot.n }
-            : null,
-          custom: it.custom,
-        })),
-      }),
+      builderSignature(template, healthFocus, activeSlot, items),
     );
     setSavedMealBanner(`Saved to today — ${entry.label}.`);
   }, [activeSlot, healthFocus, items, template]);
@@ -233,27 +246,6 @@ export function PlateMealBuilder({
     return unsub;
   }, []);
 
-  useEffect(() => {
-    if (lastSavedSignature != null) return;
-    setLastSavedSignature(
-      JSON.stringify({
-        template,
-        healthFocus,
-        activeSlot,
-        items: items.map((it) => ({
-          id: it.id,
-          slot: it.slot,
-          source: it.source,
-          portion: it.portion,
-          food: it.foodSnapshot
-            ? { n: it.foodSnapshot.n }
-            : null,
-          custom: it.custom,
-        })),
-      }),
-    );
-  }, [activeSlot, healthFocus, items, lastSavedSignature, template]);
-
   const totals = useMemo(() => sumMacros(items), [items]);
   const compare = useMemo(
     () => compareToPhase(totals, phaseKcal, targetProtein),
@@ -270,26 +262,11 @@ export function PlateMealBuilder({
   );
 
   const currentSignature = useMemo(
-    () =>
-      JSON.stringify({
-        template,
-        healthFocus,
-        activeSlot,
-        items: items.map((it) => ({
-          id: it.id,
-          slot: it.slot,
-          source: it.source,
-          portion: it.portion,
-          food: it.foodSnapshot
-            ? { n: it.foodSnapshot.n }
-            : null,
-          custom: it.custom,
-        })),
-      }),
+    () => builderSignature(template, healthFocus, activeSlot, items),
     [activeSlot, healthFocus, items, template],
   );
 
-  const isDirty = lastSavedSignature != null && currentSignature !== lastSavedSignature;
+  const isDirty = currentSignature !== lastSavedSignature;
 
   const handleClearWithUndo = useCallback(() => {
     if (items.length === 0) return;
