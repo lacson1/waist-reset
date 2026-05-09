@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useProgressStore } from '../store/progressStore'
 import { usePlateBuilderStore } from '../store/plateBuilderStore'
 import { computePersonal, phaseKcal, phaseKcalNote, currentPhase } from '../domain/personalisation'
-import type { MealTemplate } from '../domain/plateMeal'
+import type { MealSlot, MealTemplate } from '../domain/plateMeal'
+import { PlatePageSummary } from '../components/plate/PlatePageSummary'
 import type { PlateScenarioPreset, PlateSwapRow } from '../data/plateContent'
 import { PLATE_SCENARIOS, PLATE_SWAP_SECTIONS } from '../data/plateContent'
 import { buildSwapCustomLine } from '../domain/plateSwapApply'
@@ -11,6 +12,12 @@ import { PlateMealBuilder } from '../components/plate/PlateMealBuilder'
 import { PlateConfirmDialog } from '../components/plate/builder/PlateConfirmDialog'
 
 const MEAL_TEMPLATES: MealTemplate[] = ['rest', 'training', 'soup']
+
+const QUICK_TEMPLATE_CHOICES: ReadonlyArray<{ id: MealTemplate; label: string; hint: string }> = [
+  { id: 'rest', label: 'Rest day plate', hint: 'Lower-carb default; emphasizes veg, protein, fibre.' },
+  { id: 'training', label: 'Training day plate', hint: 'Adds a slow-carb wedge around training demand.' },
+  { id: 'soup', label: 'Soup bowl', hint: 'Great for batch prep and high-volume satiety meals.' },
+]
 type PlateSnapshot = Pick<
   ReturnType<typeof usePlateBuilderStore.getState>,
   'template' | 'healthFocus' | 'activeSlot' | 'items'
@@ -48,12 +55,6 @@ export function PlatePage() {
     message: string
     snapshot: PlateSnapshot
   } | null>(null)
-
-  const quickTemplateChoices: ReadonlyArray<{ id: MealTemplate; label: string; hint: string }> = [
-    { id: 'rest', label: 'Rest day plate', hint: 'Lower-carb default; emphasizes veg, protein, fibre.' },
-    { id: 'training', label: 'Training day plate', hint: 'Adds a slow-carb wedge around training demand.' },
-    { id: 'soup', label: 'Soup bowl', hint: 'Great for batch prep and high-volume satiety meals.' },
-  ]
 
   const runApplyPreset = useCallback(
     (preset: PlateScenarioPreset, title: string) => {
@@ -106,11 +107,11 @@ export function PlatePage() {
   const handleQuickTemplatePick = useCallback(
     (next: MealTemplate) => {
       setTemplate(next)
-      const picked = quickTemplateChoices.find((choice) => choice.id === next)
+      const picked = QUICK_TEMPLATE_CHOICES.find((choice) => choice.id === next)
       if (picked) setPageNotice(`Template applied: ${picked.label}.`)
       queueMicrotask(() => scrollPlateBuilderIntoView())
     },
-    [quickTemplateChoices, setTemplate],
+    [setTemplate],
   )
 
   useEffect(() => {
@@ -195,6 +196,16 @@ export function PlatePage() {
           {pageNotice}
         </p>
       ) : null}
+      <PlatePageSummary
+        phaseKcal={kcal}
+        targetProtein={personal.protein}
+        onJumpToBuilder={scrollPlateBuilderIntoView}
+        onFocusSlot={(slot: MealSlot) => {
+          setActiveSlot(slot)
+          queueMicrotask(() => scrollPlateBuilderIntoView())
+        }}
+      />
+
       {scenarioUndo ? (
         <div className="plate-page-undo" role="status">
           <span className="plate-page-undo__message">{scenarioUndo.message}</span>
@@ -216,7 +227,7 @@ export function PlatePage() {
           Pick a template first, then add meal lines to wedges. You can switch templates anytime.
         </p>
         <div className="plate-page-quickstart-grid">
-          {quickTemplateChoices.map((choice) => {
+          {QUICK_TEMPLATE_CHOICES.map((choice) => {
             const active = plateTemplate === choice.id
             return (
               <article

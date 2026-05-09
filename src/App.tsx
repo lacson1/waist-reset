@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
+import { RouteErrorBoundary } from './components/RouteErrorBoundary'
 
 const StartPage = lazy(() => import('./pages/StartPage').then((m) => ({ default: m.StartPage })))
 const ProgressPage = lazy(() =>
@@ -52,6 +53,7 @@ const FoodSwapsPage = lazy(() =>
 
 export default function App() {
   return (
+    <RouteErrorBoundary>
     <Suspense fallback={<div className="app-loading muted">Loading page…</div>}>
       <Routes>
         <Route path="/" element={<AppShell />}>
@@ -83,5 +85,6 @@ export default function App() {
         </Route>
       </Routes>
     </Suspense>
+    </RouteErrorBoundary>
   )
 }

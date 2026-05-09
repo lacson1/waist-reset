@@ -15,16 +15,29 @@ export default async function handler(req: { method?: string; headers?: { author
     res.status(401).send(JSON.stringify({ error: 'Missing Authorization header' }))
     return
   }
+  if (!auth.startsWith('Bearer ')) {
+    res.status(401).send(JSON.stringify({ error: 'Authorization must be a Bearer token' }))
+    return
+  }
   const bodyStr =
     typeof req.body === 'string' ? req.body : req.body != null ? JSON.stringify(req.body) : '{}'
-  const r = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: auth,
-    },
-    body: bodyStr,
-  })
-  const text = await r.text()
-  res.status(r.status).send(text)
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60_000)
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: auth,
+      },
+      body: bodyStr,
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    const text = await r.text()
+    res.status(r.status).send(text)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Upstream request failed'
+    res.status(502).send(JSON.stringify({ error: message }))
+  }
 }
