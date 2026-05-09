@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useProgressStore } from '../store/progressStore'
 import { usePlateBuilderStore } from '../store/plateBuilderStore'
 import { computePersonal, phaseKcal, phaseKcalNote, currentPhase } from '../domain/personalisation'
-import type { MealTemplate } from '../domain/plateMeal'
+import type { MealSlot, MealTemplate } from '../domain/plateMeal'
+import { PlatePageSummary } from '../components/plate/PlatePageSummary'
 import type { PlateScenarioPreset, PlateSwapRow } from '../data/plateContent'
 import { PLATE_SCENARIOS, PLATE_SWAP_SECTIONS } from '../data/plateContent'
 import { buildSwapCustomLine } from '../domain/plateSwapApply'
@@ -195,6 +196,16 @@ export function PlatePage() {
           {pageNotice}
         </p>
       ) : null}
+      <PlatePageSummary
+        phaseKcal={kcal}
+        targetProtein={personal.protein}
+        onJumpToBuilder={scrollPlateBuilderIntoView}
+        onFocusSlot={(slot: MealSlot) => {
+          setActiveSlot(slot)
+          queueMicrotask(() => scrollPlateBuilderIntoView())
+        }}
+      />
+
       {scenarioUndo ? (
         <div className="plate-page-undo" role="status">
           <span className="plate-page-undo__message">{scenarioUndo.message}</span>
