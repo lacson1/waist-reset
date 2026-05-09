@@ -5,6 +5,7 @@ import { usePlateBuilderStore } from '../store/plateBuilderStore'
 import { computePersonal, phaseKcal, phaseKcalNote, currentPhase } from '../domain/personalisation'
 import type { MealSlot, MealTemplate } from '../domain/plateMeal'
 import { PlatePageSummary } from '../components/plate/PlatePageSummary'
+import { TodayMealsCard } from '../components/today/TodayMealsCard'
 import type { PlateScenarioPreset, PlateSwapRow } from '../data/plateContent'
 import { PLATE_SCENARIOS, PLATE_SWAP_SECTIONS } from '../data/plateContent'
 import { buildSwapCustomLine } from '../domain/plateSwapApply'
@@ -172,6 +173,8 @@ export function PlatePage() {
         targetProtein={personal.protein}
         baseline={baseline}
       />
+
+      <TodayMealsCard />
 
       <section className="plate-page-reference plate-page-reference--launcher" aria-label="Advanced tools">
         <div className="plate-page-reference__summary">
