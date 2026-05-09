@@ -1640,32 +1640,58 @@ a:hover {
     border-radius: 999px;
     background: var(--bg-subtle);
     overflow: hidden;
+    display: flex;
 }
 
-.plate-page-summary__bar > span {
+.plate-page-summary__bar-seg {
     display: block;
     height: 100%;
-    border-radius: inherit;
-    background: var(--text-tertiary);
     transition: width 220ms ease;
 }
 
-.plate-page-summary__metric--kcal.is-ontrack .plate-page-summary__bar > span,
-.plate-page-summary__metric--protein.is-met .plate-page-summary__bar > span {
-    background: var(--positive);
+.plate-page-summary__bar-seg--logged {
+    background-color: var(--text-secondary);
 }
 
-.plate-page-summary__metric--kcal.is-low .plate-page-summary__bar > span,
-.plate-page-summary__metric--protein.is-close .plate-page-summary__bar > span {
-    background: var(--gold);
+.plate-page-summary__bar-seg--meal {
+    background-color: var(--text-tertiary);
+    background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.4) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.4) 75%,
+        transparent 75%
+    );
+    background-size: 8px 8px;
 }
 
-.plate-page-summary__metric--kcal.is-over .plate-page-summary__bar > span {
-    background: var(--clay);
+.plate-page-summary__metric--kcal.is-ontrack .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--kcal.is-ontrack .plate-page-summary__bar-seg--meal,
+.plate-page-summary__metric--protein.is-met .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--protein.is-met .plate-page-summary__bar-seg--meal {
+    background-color: var(--positive);
 }
 
-.plate-page-summary__metric--protein.is-low .plate-page-summary__bar > span {
-    background: var(--clay);
+.plate-page-summary__metric--kcal.is-low .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--kcal.is-low .plate-page-summary__bar-seg--meal,
+.plate-page-summary__metric--protein.is-close .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--protein.is-close .plate-page-summary__bar-seg--meal {
+    background-color: var(--gold);
+}
+
+.plate-page-summary__metric--kcal.is-over .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--kcal.is-over .plate-page-summary__bar-seg--meal,
+.plate-page-summary__metric--protein.is-low .plate-page-summary__bar-seg--logged,
+.plate-page-summary__metric--protein.is-low .plate-page-summary__bar-seg--meal {
+    background-color: var(--clay);
+}
+
+.plate-page-summary__metric-foot {
+    font-size: var(--text-xs);
+    line-height: 1.2;
+    margin-top: 2px;
 }
 
 .plate-page-summary__macros {
