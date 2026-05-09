@@ -2174,11 +2174,27 @@ a:hover {
     stroke-width: 2px;
 }
 
+.plate-wedge--interactive.is-filled {
+    filter: saturate(1.18) brightness(0.99);
+    stroke: var(--positive);
+    stroke-width: 2px;
+}
+
+.plate-wedge--interactive.is-filled.is-dim {
+    opacity: 0.7 !important;
+}
+
 .plate-wedge--interactive.is-active {
     opacity: 1 !important;
     filter: saturate(1.08);
     stroke: var(--teal-deep);
     stroke-width: 2px;
+}
+
+.plate-wedge--interactive.is-active.is-filled {
+    stroke: var(--teal-deep);
+    stroke-width: 2.4px;
+    filter: saturate(1.16);
 }
 
 .plate-wedge--interactive.is-dim {

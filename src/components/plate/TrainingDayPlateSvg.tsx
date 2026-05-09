@@ -13,9 +13,15 @@ type Props = {
   slotPicks?: Partial<Record<TrainingDaySlot, readonly PlatePickLine[]>>
 }
 
-function wedgeClass(slot: TrainingDaySlot, active: TrainingDaySlot | null | undefined, interactive: boolean | undefined) {
+function wedgeClass(
+  slot: TrainingDaySlot,
+  active: TrainingDaySlot | null | undefined,
+  interactive: boolean | undefined,
+  filled: boolean,
+) {
   let c = 'plate-wedge'
   if (interactive) c += ' plate-wedge--interactive'
+  if (filled) c += ' is-filled'
   if (active === slot) c += ' is-active'
   else if (interactive && active) c += ' is-dim'
   return c
@@ -115,7 +121,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
       </g>
 
       <path
-        className={wedgeClass('veg', activeSlot, interactive)}
+        className={wedgeClass('veg', activeSlot, interactive, (slotPicks?.veg?.length ?? 0) > 0)}
         d="M 100 100 L 100 8 A 92 92 0 0 1 100 192 Z"
         fill={`url(#${g('veg')})`}
         stroke="rgba(255,255,255,0.32)"
@@ -125,7 +131,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
         {...wedgeA11y('veg')}
       />
       <path
-        className={wedgeClass('protein', activeSlot, interactive)}
+        className={wedgeClass('protein', activeSlot, interactive, (slotPicks?.protein?.length ?? 0) > 0)}
         d="M 100 100 L 100 192 A 92 92 0 0 1 8 100 Z"
         fill={`url(#${g('protein')})`}
         stroke="rgba(255,255,255,0.32)"
@@ -135,7 +141,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
         {...wedgeA11y('protein')}
       />
       <path
-        className={wedgeClass('carbs', activeSlot, interactive)}
+        className={wedgeClass('carbs', activeSlot, interactive, (slotPicks?.carbs?.length ?? 0) > 0)}
         d="M 100 100 L 8 100 A 92 92 0 0 1 100 8 Z"
         fill={`url(#${g('carbs')})`}
         stroke="rgba(255,255,255,0.32)"

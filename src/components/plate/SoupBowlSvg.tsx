@@ -23,9 +23,15 @@ const LAYER_META: { slot: SoupBowlSlot; y: number; h: number; g0: string; g1: st
   { slot: 'base', y: 138, h: 22, g0: '#dcd8e2', g1: '#7d7788' },
 ]
 
-function layerClass(slot: SoupBowlSlot, active: SoupBowlSlot | null | undefined, interactive: boolean | undefined) {
+function layerClass(
+  slot: SoupBowlSlot,
+  active: SoupBowlSlot | null | undefined,
+  interactive: boolean | undefined,
+  filled: boolean,
+) {
   let c = 'bowl-layer'
   if (interactive) c += ' plate-wedge--interactive'
+  if (filled) c += ' is-filled'
   if (active === slot) c += ' is-active'
   else if (interactive && active) c += ' is-dim'
   return c
@@ -258,7 +264,7 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
         {LAYER_META.map(({ slot, y, h }) => (
           <rect
             key={slot}
-            className={layerClass(slot, activeSlot, true)}
+            className={layerClass(slot, activeSlot, true, (slotPicks?.[slot]?.length ?? 0) > 0)}
             x="16"
             y={y}
             width="168"

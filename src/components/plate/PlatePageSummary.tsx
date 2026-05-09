@@ -77,7 +77,14 @@ export function PlatePageSummary({ phaseKcal, targetProtein, onJumpToBuilder, on
               {kcalPct != null ? <span className="plate-page-summary__pct">{kcalPct}%</span> : null}
             </span>
           </div>
-          <div className="plate-page-summary__bar" aria-hidden>
+          <div
+            className="plate-page-summary__bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={kcalBarPct}
+            aria-valuetext={kcalPct != null ? `${kcalPct}% of calorie target` : 'Calorie target unset'}
+          >
             <span style={{ width: `${kcalBarPct}%` }} />
           </div>
         </div>
@@ -94,7 +101,14 @@ export function PlatePageSummary({ phaseKcal, targetProtein, onJumpToBuilder, on
               {proteinPct != null ? <span className="plate-page-summary__pct">{proteinPct}%</span> : null}
             </span>
           </div>
-          <div className="plate-page-summary__bar" aria-hidden>
+          <div
+            className="plate-page-summary__bar"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={proteinBarPct}
+            aria-valuetext={proteinPct != null ? `${proteinPct}% of protein target` : 'Protein target unset'}
+          >
             <span style={{ width: `${proteinBarPct}%` }} />
           </div>
         </div>
