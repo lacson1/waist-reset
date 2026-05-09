@@ -229,6 +229,15 @@ export function PlateMealBuilder({
     setResetDialogOpen(false);
   }, [resetBuilder]);
 
+  const handleRemoveLine = useCallback(
+    (id: string) => {
+      const removed = items.find((it) => it.id === id);
+      removeItem(id);
+      if (removed) setActiveSlot(removed.slot);
+    },
+    [items, removeItem, setActiveSlot],
+  );
+
   const onPortionSlider = useCallback(
     (id: string, raw: string) => {
       const n = Number(raw);
@@ -433,7 +442,7 @@ export function PlateMealBuilder({
           activeSlot={activeSlot}
           items={items}
           onSetPortion={onPortionSlider}
-          onRemove={removeItem}
+          onRemove={handleRemoveLine}
           onClear={handleClearWithUndo}
           onResetAll={openResetDialog}
           onSaveToToday={handleSaveToToday}
