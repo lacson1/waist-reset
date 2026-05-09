@@ -4582,6 +4582,14 @@ a:hover {
 
 .plate-meal-builder {
     margin: 0 0 18px;
+    /* Leave room under the sticky summary when scrollIntoView jumps here */
+    scroll-margin-top: calc(var(--appbar-h) + 170px);
+}
+
+@media (max-width: 720px) {
+    .plate-meal-builder {
+        scroll-margin-top: calc(var(--appbar-h) + 220px);
+    }
 }
 
 .plate-meal-builder__intro {
