@@ -12,12 +12,6 @@ import { PlateMealBuilder } from '../components/plate/PlateMealBuilder'
 import { PlateConfirmDialog } from '../components/plate/builder/PlateConfirmDialog'
 
 const MEAL_TEMPLATES: MealTemplate[] = ['rest', 'training', 'soup']
-
-const QUICK_TEMPLATE_CHOICES: ReadonlyArray<{ id: MealTemplate; label: string; hint: string }> = [
-  { id: 'rest', label: 'Rest day plate', hint: 'Lower-carb default; emphasizes veg, protein, fibre.' },
-  { id: 'training', label: 'Training day plate', hint: 'Adds a slow-carb wedge around training demand.' },
-  { id: 'soup', label: 'Soup bowl', hint: 'Great for batch prep and high-volume satiety meals.' },
-]
 type PlateSnapshot = Pick<
   ReturnType<typeof usePlateBuilderStore.getState>,
   'template' | 'healthFocus' | 'activeSlot' | 'items'
@@ -104,16 +98,6 @@ export function PlatePage() {
     [addCustomItem, plateTemplate, setActiveSlot],
   )
 
-  const handleQuickTemplatePick = useCallback(
-    (next: MealTemplate) => {
-      setTemplate(next)
-      const picked = QUICK_TEMPLATE_CHOICES.find((choice) => choice.id === next)
-      if (picked) setPageNotice(`Template applied: ${picked.label}.`)
-      queueMicrotask(() => scrollPlateBuilderIntoView())
-    },
-    [setTemplate],
-  )
-
   useEffect(() => {
     if (!pageNotice) return
     const t = window.setTimeout(() => setPageNotice(null), 2600)
@@ -153,44 +137,6 @@ export function PlatePage() {
 
   return (
     <section className="view active plate-page">
-      <div className="topbar plate-page-topbar">
-        <div className="topbar-left">
-          <div className="eyebrow">Plate</div>
-          <h1>Build the plate, not the calorie count.</h1>
-          <div className="topbar-sub">
-            Chips from <Link to="/progress">My Progress</Link>. <Link to="/numbers">Your Numbers</Link> for
-            Mifflin–St Jeor. <Link to="/daily">Daily plan</Link> for example meal timing and kcal blocks.
-          </div>
-        </div>
-        {kcal != null && (
-          <div className="topbar-right">
-            <span className="chip teal">{kcal} kcal</span>
-            <span className="chip gold">{kcalNote}</span>
-            {personal.protein != null && (
-              <span className="chip clay">~{personal.protein} g protein</span>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="plate-page-actions" role="group" aria-label="Plate page quick actions">
-        <button
-          type="button"
-          className="btn"
-          onClick={() => scrollPlateBuilderIntoView()}
-          aria-label="Jump to meal builder"
-        >
-          Build now
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost plate-page-actions__secondary"
-          onClick={() => requestScenarioPreset(PLATE_SCENARIOS[0]?.platePreset, PLATE_SCENARIOS[0]?.title ?? 'Starter scenario')}
-          aria-label="Load a complete starter scenario onto the builder"
-        >
-          Apply starter scenario
-        </button>
-      </div>
       {pageNotice ? (
         <p className="plate-page-notice" role="status">
           {pageNotice}
@@ -219,40 +165,6 @@ export function PlatePage() {
         </div>
       ) : null}
 
-      <section className="plate-page-quickstart" aria-labelledby="plate-quickstart-heading">
-        <h2 id="plate-quickstart-heading" className="section-h section-h--flush">
-          Quick start templates
-        </h2>
-        <p className="plate-lead">
-          Pick a template first, then add meal lines to wedges. You can switch templates anytime.
-        </p>
-        <div className="plate-page-quickstart-grid">
-          {QUICK_TEMPLATE_CHOICES.map((choice) => {
-            const active = plateTemplate === choice.id
-            return (
-              <article
-                key={choice.id}
-                className={`plate-page-quickstart-tile${active ? ' is-active' : ''}`}
-              >
-                <div className="plate-page-quickstart-tile__head">
-                  <strong>{choice.label}</strong>
-                  {active ? <span className="chip teal">Current</span> : null}
-                </div>
-                <p className="muted">{choice.hint}</p>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => handleQuickTemplatePick(choice.id)}
-                  aria-label={`Apply ${choice.label}`}
-                  disabled={active}
-                >
-                  {active ? 'Applied' : 'Apply template'}
-                </button>
-              </article>
-            )
-          })}
-        </div>
-      </section>
 
       <PlateMealBuilder
         phaseKcal={kcal}

@@ -25,50 +25,10 @@ import { PlateTemplatePicker } from "./builder/PlateTemplatePicker";
 import { PlateVisual } from "./builder/PlateVisual";
 import { PlateWedgeContext } from "./builder/PlateWedgeContext";
 
-const PLATE_COLLAPSIBLE_HINT_KEY = "vat_plate_collapsible_hint_v1";
-const PLATE_TOUR_DISMISSED_KEY = "vat_plate_builder_tour_v1";
-
 type BuilderSnapshot = Pick<
   ReturnType<typeof usePlateBuilderStore.getState>,
   "template" | "healthFocus" | "activeSlot" | "items"
 >;
-
-/** Safari Private mode and some embedded webviews throw on storage access. */
-function readHintDismissed(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(PLATE_COLLAPSIBLE_HINT_KEY) != null;
-  } catch {
-    return false;
-  }
-}
-
-function persistHintDismissed(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(PLATE_COLLAPSIBLE_HINT_KEY, "1");
-  } catch {
-    /* storage unavailable — hint just reappears next session */
-  }
-}
-
-function readTourDismissed(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.localStorage.getItem(PLATE_TOUR_DISMISSED_KEY) != null;
-  } catch {
-    return false;
-  }
-}
-
-function persistTourDismissed(): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(PLATE_TOUR_DISMISSED_KEY, "1");
-  } catch {
-    /* storage unavailable */
-  }
-}
 
 function captureBuilderSnapshot(): BuilderSnapshot {
   const st = usePlateBuilderStore.getState();
@@ -156,13 +116,6 @@ export function PlateMealBuilder({
     message: string;
     snapshot: BuilderSnapshot;
   } | null>(null);
-  const [showCollapsibleHint, setShowCollapsibleHint] = useState(
-    () => !readHintDismissed(),
-  );
-  const [tourStep, setTourStep] = useState(0);
-  const [showTour, setShowTour] = useState(() => !readTourDismissed());
-  const [templateTouched, setTemplateTouched] = useState(false);
-  const [wedgeTouched, setWedgeTouched] = useState(false);
   const [lastSavedSignature, setLastSavedSignature] = useState<string>(() =>
     builderSignature(
       usePlateBuilderStore.getState().template,
@@ -208,15 +161,9 @@ export function PlateMealBuilder({
     (next: MealTemplate) => {
       if (next === template) return;
       setTemplate(next);
-      setTemplateTouched(true);
     },
     [setTemplate, template],
   );
-
-  const dismissCollapsibleHint = useCallback(() => {
-    persistHintDismissed();
-    setShowCollapsibleHint(false);
-  }, []);
 
   const openResetDialog = useCallback(() => setResetDialogOpen(true), []);
   const confirmResetDialog = useCallback(() => {
@@ -284,15 +231,6 @@ export function PlateMealBuilder({
     setUndoBanner(null);
   }, [undoBanner]);
 
-  const completion = useMemo(
-    () => ({
-      template: templateTouched || template !== "rest",
-      wedge: wedgeTouched || activeSlot !== DEFAULT_ACTIVE_SLOT[template],
-      lines: items.length > 0,
-    }),
-    [activeSlot, items.length, template, templateTouched, wedgeTouched],
-  );
-
   const saveStateLabel =
     items.length === 0
       ? "No meal lines yet"
@@ -301,22 +239,6 @@ export function PlateMealBuilder({
       : "Saved";
   const saveStateTone: "saved" | "unsaved" | "idle" =
     items.length === 0 ? "idle" : isDirty ? "unsaved" : "saved";
-
-  const handleTourNext = useCallback(() => {
-    setTourStep((prev) => {
-      if (prev >= 2) {
-        persistTourDismissed();
-        setShowTour(false);
-        return prev;
-      }
-      return prev + 1;
-    });
-  }, []);
-
-  const handleTourDismiss = useCallback(() => {
-    persistTourDismissed();
-    setShowTour(false);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -354,7 +276,6 @@ export function PlateMealBuilder({
   const handleSelectSlot = useCallback(
     (slot: MealSlot) => {
       setActiveSlot(slot);
-      setWedgeTouched(true);
     },
     [setActiveSlot],
   );
@@ -382,17 +303,10 @@ export function PlateMealBuilder({
   return (
     <div className="card plate-meal-builder" data-testid="plate-meal-builder">
       <PlateMealBuilderIntro
-        showCollapsibleHint={showCollapsibleHint}
-        onDismissHint={dismissCollapsibleHint}
         savedMealBanner={savedMealBanner}
         addedLineBanner={addedLineBanner}
         saveStateLabel={saveStateLabel}
         saveStateTone={saveStateTone}
-        completion={completion}
-        showTour={showTour}
-        tourStep={tourStep}
-        onTourNext={handleTourNext}
-        onTourDismiss={handleTourDismiss}
       />
 
       <PlateTemplatePicker template={template} onPick={handleTemplatePick} />
