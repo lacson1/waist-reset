@@ -4596,7 +4596,6 @@ a:hover {
     margin-bottom: 4px;
 }
 
-.plate-meal-builder__intro .plate-meal-builder__hint-banner,
 .plate-meal-builder__intro .plate-meal-builder__notice {
     margin-top: 12px;
 }
@@ -4610,45 +4609,6 @@ a:hover {
     align-items: baseline;
     justify-content: space-between;
     gap: 10px;
-}
-
-.plate-meal-builder__lead {
-    margin: 6px 0 0;
-    font-size: 14px;
-    line-height: 1.55;
-    max-width: 52rem;
-}
-
-.plate-meal-builder__steps {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 10px 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.plate-meal-builder__steps li {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    border: 1px solid rgba(31, 61, 46, 0.14);
-    background: rgba(255, 255, 255, 0.72);
-    color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-.plate-meal-builder__steps strong {
-    color: var(--text-primary);
-}
-
-.plate-meal-builder__steps li.is-done {
-    border-color: rgba(26, 138, 90, 0.34);
-    background: rgba(26, 138, 90, 0.1);
-    color: var(--positive);
 }
 
 .plate-meal-builder__save-state {
@@ -4677,31 +4637,6 @@ a:hover {
     color: var(--text-primary);
 }
 
-.plate-meal-builder__tour {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin: 10px 0 12px;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(31, 96, 110, 0.25);
-    background: rgba(31, 96, 110, 0.07);
-    color: var(--text-secondary);
-    font-size: 13px;
-    line-height: 1.45;
-}
-
-.plate-meal-builder__tour p {
-    margin: 0;
-}
-
-.plate-meal-builder__tour-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .plate-meal-builder__block-title {
     margin: 20px 0 10px;
     font-family: inherit;
@@ -4712,38 +4647,19 @@ a:hover {
     color: var(--text-tertiary);
 }
 
-.plate-meal-builder__context+.plate-meal-builder__block-title {
-    margin-top: 12px;
-}
-
 .plate-meal-builder__context {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 14px;
-    row-gap: 8px;
-    margin: 12px 0 4px;
-    padding: 10px 14px;
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(31, 61, 46, 0.1);
-    /* Quiet shell; slot tint lives on the wedge pill + guide rows (matches plate SVG). */
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 250, 249, 0.94) 50%, rgba(251, 246, 236, 0.9) 100%);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75) inset, 0 2px 12px rgba(22, 32, 31, 0.045);
-}
-
-.plate-meal-builder__context-main {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
     min-width: 0;
 }
 
 .plate-meal-builder__context-label {
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-tertiary);
 }
@@ -4802,13 +4718,6 @@ a:hover {
     border-color: rgba(94, 78, 142, 0.3);
 }
 
-.plate-meal-builder__context-hint {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.4;
-    min-width: 0;
-}
-
 /* Lexend + compact size: foods for the active wedge (search list, lens picks, meal line name). */
 .plate-meal-builder .food-search__row-name strong {
     font-family: var(--font-plate-picks);
@@ -4838,34 +4747,20 @@ a:hover {
     letter-spacing: 0.02em;
 }
 
-@media (max-width: 640px) {
-    .plate-meal-builder__context {
-        grid-template-columns: 1fr;
-        row-gap: 8px;
-    }
-
-    .plate-meal-builder__context-main {
-        justify-content: flex-start;
-    }
-
-    .plate-meal-builder__context-hint {
-        max-width: 100%;
-    }
-}
-
-.plate-meal-builder__toolbar {
+/* One unified controls strip: template chips on the left, active-wedge pill on the right. */
+.plate-meal-builder__controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px 18px;
-    margin-bottom: 0;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 18px;
+    margin: 14px 0 16px;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--border);
 }
 
-@media (min-width: 768px) {
-    .plate-meal-builder__toolbar {
-        display: block;
-    }
+.plate-meal-builder__toolbar {
+    display: contents;
 }
 
 .plate-meal-builder__label {
