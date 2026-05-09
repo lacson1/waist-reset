@@ -81,17 +81,10 @@ export function PlateVisual({ template, activeSlot, items, onSelectSlot }: Props
   }, [items, template])
 
   return (
-    <>
-      <h3
-        className="plate-meal-builder__block-title"
-        id="plate-builder-plate-heading"
-      >
-        Plate and wedges
-      </h3>
-      <div
-        className="plate-meal-builder__plate-visual"
-        aria-labelledby="plate-builder-plate-heading"
-      >
+    <div
+      className="plate-meal-builder__plate-visual"
+      aria-label="Plate and wedges"
+    >
         <div className="plate-meal-builder__plate-media">
           <div className="plate-meal-builder__svg-frame">{graphic}</div>
         </div>
@@ -135,7 +128,6 @@ export function PlateVisual({ template, activeSlot, items, onSelectSlot }: Props
             <p className="plate-meal-builder__guide-drizzle muted">{footer}</p>
           )}
         </div>
-      </div>
-    </>
+    </div>
   )
 }

@@ -318,9 +318,10 @@ export function PlateMealBuilder({
         saveStateTone={saveStateTone}
       />
 
-      <PlateTemplatePicker template={template} onPick={handleTemplatePick} />
-
-      <PlateWedgeContext activeWedgeLabel={activeWedgeLabel} activeSlot={activeSlot} />
+      <div className="plate-meal-builder__controls">
+        <PlateTemplatePicker template={template} onPick={handleTemplatePick} />
+        <PlateWedgeContext activeWedgeLabel={activeWedgeLabel} activeSlot={activeSlot} />
+      </div>
 
       <PlateVisual
         template={template}
