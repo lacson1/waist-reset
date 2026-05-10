@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FOOD_SWAP_CATEGORIES,
@@ -158,10 +158,10 @@ function SwapRowCard({ row, accent }: { row: FoodSwapRow; accent: FoodSwapAccent
           <p className="food-swaps-swap-text">{row.try}</p>
         </div>
       </div>
-      <div className="food-swaps-swap-why">
-        <span className="food-swaps-swap-why-label">Why it works</span>
-        {row.why}
-      </div>
+      <details className="food-swaps-swap-details">
+        <summary className="food-swaps-swap-details__summary">Why it works</summary>
+        <div className="food-swaps-swap-details__body">{row.why}</div>
+      </details>
     </article>
   )
 }
@@ -188,6 +188,18 @@ function shortCategoryTitle(title: string) {
   return title.replace(' (extended)', '')
 }
 
+const FOOD_SWAPS_TAB_ORDER: FoodSwapsMainTab[] = [
+  'top-ten',
+  ...FOOD_SWAP_CATEGORIES.map((c) => c.id),
+  'why',
+]
+
+function foodSwapsTabButtonId(tab: FoodSwapsMainTab): string {
+  if (tab === 'top-ten') return 'food-swaps-tab-top-ten'
+  if (tab === 'why') return 'food-swaps-tab-why'
+  return `food-swaps-tab-${tab}`
+}
+
 export function FoodSwapsPage() {
   const defaultTab: FoodSwapsMainTab = 'top-ten'
   const [activeTab, setActiveTab] = useState<FoodSwapsMainTab>(() => {
@@ -195,11 +207,38 @@ export function FoodSwapsPage() {
     return hashToTab(window.location.hash.slice(1)) ?? defaultTab
   })
 
-  const selectTab = useCallback((tab: FoodSwapsMainTab) => {
+  const selectTab = useCallback((tab: FoodSwapsMainTab, focusTabButton = false) => {
     setActiveTab(tab)
     const hash = tabToHash(tab)
     window.history.replaceState(null, '', `#${hash}`)
+    if (focusTabButton) {
+      requestAnimationFrame(() => document.getElementById(foodSwapsTabButtonId(tab))?.focus())
+    }
   }, [])
+
+  const onTablistKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      const order = FOOD_SWAPS_TAB_ORDER
+      const i = order.indexOf(activeTab)
+      if (i < 0) return
+      let next: FoodSwapsMainTab | null = null
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        next = order[Math.min(order.length - 1, i + 1)] ?? null
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        next = order[Math.max(0, i - 1)] ?? null
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        next = order[0] ?? null
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        next = order[order.length - 1] ?? null
+      }
+      if (next != null && next !== activeTab) selectTab(next, true)
+    },
+    [activeTab, selectTab],
+  )
 
   useEffect(() => {
     const onHash = () => {
@@ -209,6 +248,16 @@ export function FoodSwapsPage() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      document.getElementById(foodSwapsTabButtonId(activeTab))?.scrollIntoView({
+        inline: 'center',
+        block: 'nearest',
+        behavior: 'smooth',
+      })
+    })
+  }, [activeTab])
 
   return (
     <section className="view active food-swaps-page">
@@ -235,23 +284,52 @@ export function FoodSwapsPage() {
                 </Link>
                 <span className="food-swaps-hero__plate-note"> — same protocol, portioned visually</span>
               </p>
+              <p className="food-swaps-hero__flow">
+                <span className="food-swaps-hero__flow-strong">Suggested flow:</span> Start with{' '}
+                <button type="button" className="food-swaps-hero__flow-link" onClick={() => selectTab('top-ten')}>
+                  Top 10
+                </button>
+                , then open a category — use arrows on the tab bar for quick jumps.
+              </p>
             </div>
           </div>
         </header>
 
+        <nav className="card food-swaps-toc food-swaps-toc--pick" aria-label="Jump to a swap section">
+          <span className="food-swaps-toc-label">Jump to</span>
+          <div className="food-swaps-toc-buttons food-swaps-toc-buttons--grid">
+            <button
+              type="button"
+              className="food-swaps-toc-btn food-swaps-toc-btn--featured"
+              onClick={() => selectTab('top-ten')}
+            >
+              Top 10 — highest leverage
+            </button>
+            {FOOD_SWAP_CATEGORIES.map((c) => (
+              <button key={c.id} type="button" className="food-swaps-toc-btn" onClick={() => selectTab(c.id)}>
+                {shortCategoryTitle(c.title)}
+              </button>
+            ))}
+            <button type="button" className="food-swaps-toc-btn" onClick={() => selectTab('why')}>
+              Why swaps work
+            </button>
+          </div>
+        </nav>
+
         <div className="food-swaps-tabs-shell">
           <div className="food-swaps-tabs-ribbon">
-            <span className="food-swaps-tabs-ribbon__label">Sections</span>
+            <span className="food-swaps-tabs-ribbon__label">Tabs</span>
             <p className="food-swaps-tabs-ribbon__hint">
-              Tabs update the URL so you can bookmark or share a category.
+              Scroll horizontally on small screens · Link updates for bookmarking
             </p>
           </div>
-          <div className="food-swaps-tablist-wrap">
+          <div className="food-swaps-tablist-wrap food-swaps-tablist-wrap--fade">
             <div className="food-swaps-tablist-scroll" role="presentation">
               <div
                 className="food-swaps-tablist"
                 role="tablist"
                 aria-label="Food swap sections"
+                onKeyDown={onTablistKeyDown}
               >
                 <button
                   type="button"
@@ -377,6 +455,24 @@ export function FoodSwapsPage() {
             </div>
           </div>
         </div>
+
+          <footer className="food-swaps-next" aria-label="Related tools">
+            <span className="food-swaps-next__label">Put swaps into practice</span>
+            <div className="food-swaps-next__links">
+              <Link to="/plate" className="food-swaps-next__link">
+                Plate builder
+              </Link>
+              <Link to="/foods" className="food-swaps-next__link">
+                Food database
+              </Link>
+              <Link to="/daily" className="food-swaps-next__link">
+                Daily plan
+              </Link>
+              <Link to="/today" className="food-swaps-next__link">
+                Today
+              </Link>
+            </div>
+          </footer>
         </div>
       </div>
     </section>
