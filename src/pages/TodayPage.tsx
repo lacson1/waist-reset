@@ -96,39 +96,35 @@ export function TodayPage() {
         </div>
       </div>
 
-      <div className="card playbook-card">
-        <div className="section-title">Today&apos;s playbook</div>
-        <p className="playbook-lead">
-          Use your numbers below, then model mains on the plate (rest / training / soup). Match timing to{' '}
+      <div className="stitch-section__head" style={{ marginTop: 8 }}>
+        <h2>Today&apos;s playbook</h2>
+        <p>
+          Use your numbers above, then model mains on the plate. Match timing to{' '}
           <Link to="/daily">Daily plan</Link> when helpful — phase kcal and protein targets are the protocol truth.
         </p>
-        <div className="playbook-grid">
-          <Link className="playbook-tile" to="/plate">
-            <strong>Plate system</strong>
-            <span>Rest / training / soup templates</span>
+      </div>
+      <div className="feature-grid" style={{ marginBottom: 20 }}>
+        {[
+          { to: '/plate', title: 'Plate system', body: 'Rest / training / soup templates', d: 'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Zm9-9v18M3 12h18' },
+          { to: '/daily', title: 'Daily structure', body: 'Example clock for General vs African emphasis', d: 'M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z' },
+          { to: '/swaps', title: 'Food swaps', body: 'High-impact substitutions by category', d: 'M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4' },
+          { to: '/meals', title: 'Meal builder', body: 'Meal-order rules + links to tools', d: 'M3 11h18M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8' },
+          { to: '/coach', title: 'Coach', body: 'Risk, adherence, and waist trends', d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z' },
+          { to: '/progress', title: 'My Progress', body: 'Baseline, labs on entries, charts', d: 'M3 3v18h18M7 14l4-4 4 4 5-5' },
+        ].map((t) => (
+          <Link key={t.to} className="feature-card" to={t.to}>
+            <span className="feature-card__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d={t.d} />
+              </svg>
+            </span>
+            <h3>{t.title}</h3>
+            <p>{t.body}</p>
           </Link>
-          <Link className="playbook-tile" to="/daily">
-            <strong>Daily structure</strong>
-            <span>Example clock for General vs African emphasis</span>
-          </Link>
-          <Link className="playbook-tile" to="/swaps">
-            <strong>Food swaps</strong>
-            <span>High-impact substitutions by category</span>
-          </Link>
-          <Link className="playbook-tile" to="/meals">
-            <strong>Meal builder</strong>
-            <span>Meal-order rules + links to tools</span>
-          </Link>
-          <Link className="playbook-tile" to="/coach">
-            <strong>Coach</strong>
-            <span>Risk, adherence, and waist trends</span>
-          </Link>
-          <Link className="playbook-tile" to="/progress">
-            <strong>My Progress</strong>
-            <span>Baseline, labs on entries, charts</span>
-          </Link>
-        </div>
-        {coachPreview.length > 0 && (
+        ))}
+      </div>
+      {coachPreview.length > 0 && (
+        <div className="card playbook-card">
           <div className="playbook-coach-preview">
             <div className="playbook-coach-label">Top signals from Coach</div>
             <ul className="playbook-coach-list">
@@ -143,8 +139,8 @@ export function TodayPage() {
               Open Coach for full detail and trace
             </Link>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="card">
         <div className="section-title">Phase map</div>
