@@ -34,9 +34,44 @@
     --radius-sm: 6px;
     --radius: 10px;
     --radius-lg: 14px;
-    --shadow: 0 1px 3px rgba(22, 32, 31, 0.06), 0 1px 2px rgba(22, 32, 31, 0.04);
-    --shadow-card: 0 1px 2px rgba(22, 32, 31, 0.04), 0 8px 28px rgba(22, 32, 31, 0.055);
+    /* Elevation (compact — borders carry structure) */
+    --elev-0: none;
+    --elev-1: 0 1px 2px rgba(22, 32, 31, 0.05), 0 1px 3px rgba(22, 32, 31, 0.04);
+    --elev-2: 0 2px 8px rgba(22, 32, 31, 0.07), 0 1px 2px rgba(22, 32, 31, 0.05);
+    --shadow: var(--elev-1);
+    --shadow-card: var(--elev-1);
     --border-card: rgba(220, 214, 200, 0.88);
+    /* Spacing ramp (4px grid, rem) */
+    --sp-1: 0.25rem;
+    --sp-2: 0.5rem;
+    --sp-3: 0.75rem;
+    --sp-4: 1rem;
+    --sp-5: 1.25rem;
+    --sp-6: 1.5rem;
+    --sp-page-x: var(--sp-5);
+    --sp-page-y: var(--sp-5);
+    --sp-page-x-wide: var(--sp-6);
+    --sp-card: var(--sp-4) var(--sp-5);
+    --sp-stack: var(--sp-4);
+    /* Material-style semantic roles (mapped to LACBIS / existing palette) */
+    --color-primary: var(--lacbis-navy);
+    --color-on-primary: #ffffff;
+    --color-primary-container: var(--teal-tint);
+    --color-on-primary-container: var(--teal-deep);
+    --color-surface: var(--bg-card);
+    --color-on-surface: var(--text-primary);
+    --color-on-surface-variant: var(--text-secondary);
+    --color-outline: var(--border);
+    --color-surface-container-low: var(--bg-sidebar);
+    --color-surface-container: var(--bg-subtle);
+    --color-error: var(--critical);
+    --color-on-error: #ffffff;
+    /* Uppercase micro-labels (eyebrow, section-title, nav-label) */
+    --label-size: var(--text-xs);
+    --label-tracking: 0.12em;
+    --label-weight: 700;
+    --label-color: var(--text-tertiary);
+    --label-leading: var(--leading-snug);
     --font-sans: 'Inter', 'Aptos', 'Segoe UI', ui-sans-serif, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     --font-display: 'DM Sans', var(--font-sans);
     /* Plate: see --font-plate-* after modular scale (uses --text-xs for HTML companion). */
@@ -76,7 +111,7 @@
     --leading-relaxed: 1.68;
     --measure-readable: 68ch;
     --content-max: 1080px;
-    --space-section: 1.75rem;
+    --space-section: var(--sp-stack);
     /* Scrollable food lists (plate panel + search): short caps hid rows on protein-heavy groups */
     --food-search-list-max: min(62vh, 480px);
     --plate-pick-list-max: min(52vh, 360px);
@@ -101,9 +136,9 @@ body,
 body {
     font-family: var(--font-sans);
     background: var(--bg-app);
-    color: var(--text-primary);
+    color: var(--color-on-surface);
     font-size: var(--text-md);
-    line-height: var(--leading-relaxed);
+    line-height: var(--leading-normal);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-optical-sizing: auto;
@@ -182,11 +217,11 @@ a:hover {
 
 .appbar {
     height: var(--appbar-h);
-    background: var(--lacbis-navy);
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
     display: flex;
     align-items: center;
-    padding: 0 22px;
+    padding: 0 var(--sp-5);
     position: sticky;
     top: 0;
     z-index: 60;
@@ -210,13 +245,13 @@ a:hover {
 .menu-toggle {
     display: none;
     margin: 0;
-    padding: 8px;
+    padding: var(--sp-2);
     align-items: center;
     justify-content: center;
     background: transparent;
     border: none;
-    border-radius: 8px;
-    color: #fff;
+    border-radius: var(--radius-sm);
+    color: var(--color-on-primary);
     cursor: pointer;
 }
 
@@ -373,13 +408,13 @@ a:hover {
 }
 
 .app-loading {
-    padding: 20px 16px;
-    font-size: 14px;
+    padding: var(--sp-5) var(--sp-4);
+    font-size: var(--text-sm);
 }
 
 .sidebar {
-    background: var(--bg-sidebar);
-    border-right: 1px solid var(--border);
+    background: var(--color-surface-container-low);
+    border-right: 1px solid var(--color-outline);
     position: sticky;
     top: var(--appbar-h);
     height: calc(100vh - var(--appbar-h));
@@ -389,37 +424,37 @@ a:hover {
 }
 
 .nav {
-    padding: 8px 10px 12px;
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
     flex: 1;
     min-height: 0;
     overflow-y: auto;
 }
 
 .nav--top {
-    padding-top: 12px;
+    padding-top: var(--sp-3);
 }
 
 .nav-group {
     margin: 0;
-    padding: 10px 0 12px;
-    border-top: 1px solid var(--border);
+    padding: var(--sp-3) 0 var(--sp-3);
+    border-top: 1px solid var(--color-outline);
 }
 
 .nav-group:first-child {
     border-top: none;
-    padding-top: 2px;
+    padding-top: var(--sp-1);
 }
 
 .nav-label {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    font-size: var(--label-size);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
-    font-weight: 700;
-    padding: 0 10px 8px;
-    line-height: 1.3;
+    color: var(--label-color);
+    font-weight: var(--label-weight);
+    padding: 0 var(--sp-3) var(--sp-2);
+    line-height: var(--label-leading);
 }
 
 .nav-items {
@@ -433,11 +468,11 @@ a:hover {
     align-items: center;
     width: 100%;
     text-align: left;
-    gap: 11px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--color-on-surface-variant);
     background: transparent;
     border: none;
     cursor: pointer;
@@ -453,23 +488,23 @@ a:hover {
 }
 
 .nav-item.active {
-    background: var(--teal-tint);
-    color: var(--teal-deep);
+    background: var(--color-primary-container);
+    color: var(--color-on-primary-container);
     font-weight: 600;
 }
 
 .sidebar-footer {
     flex-shrink: 0;
-    padding: 10px 14px 12px;
-    border-top: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(251, 246, 236, 0) 0%, rgba(237, 230, 214, 0.35) 100%);
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 1px solid var(--color-outline);
+    background: var(--color-surface-container-low);
 }
 
 .sidebar-footer-grades {
     margin: 0;
-    font-size: 10px;
-    color: var(--text-tertiary);
-    line-height: 1.45;
+    font-size: var(--label-size);
+    color: var(--label-color);
+    line-height: var(--leading-normal);
 }
 
 .sidebar-footer-grades .g-a {
@@ -502,13 +537,19 @@ a:hover {
 }
 
 .main {
-    padding: 24px 30px 44px;
+    padding: var(--sp-page-y) var(--sp-page-x) calc(var(--sp-page-y) + var(--sp-4));
     overflow-x: hidden;
+}
+
+@media (min-width: 641px) {
+    .main {
+        padding-inline: var(--sp-page-x-wide);
+    }
 }
 
 @media (max-width: 640px) {
     .main {
-        padding: 18px 14px 30px;
+        padding: var(--sp-4) var(--sp-3) calc(var(--sp-5) + var(--sp-2));
     }
 }
 
@@ -516,8 +557,8 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 16px;
-    margin-bottom: var(--space-section);
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-stack);
     flex-wrap: wrap;
 }
 
@@ -528,13 +569,13 @@ a:hover {
 
 .eyebrow {
     font-family: var(--font-display);
-    font-size: var(--text-xs);
-    letter-spacing: 0.12em;
+    font-size: var(--label-size);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
-    font-weight: 700;
-    line-height: var(--leading-snug);
-    margin-bottom: 6px;
+    color: var(--label-color);
+    font-weight: var(--label-weight);
+    line-height: var(--label-leading);
+    margin-bottom: var(--sp-2);
 }
 
 .topbar h1 {
@@ -542,12 +583,12 @@ a:hover {
     font-weight: 700;
     letter-spacing: -0.035em;
     line-height: var(--leading-tight);
-    margin-bottom: 8px;
+    margin-bottom: var(--sp-2);
 }
 
 @media (max-width: 640px) {
     .topbar {
-        margin-bottom: 16px;
+        margin-bottom: var(--sp-4);
     }
 
     .topbar-right {
@@ -558,9 +599,9 @@ a:hover {
 
 .topbar-sub {
     font-size: var(--text-sub);
-    color: var(--text-secondary);
+    color: var(--color-on-surface-variant);
     max-width: min(var(--measure-readable), 40rem);
-    line-height: var(--leading-relaxed);
+    line-height: var(--leading-normal);
 }
 
 .topbar-right {
@@ -590,12 +631,12 @@ a:hover {
 }
 
 .card {
-    background: var(--bg-card);
+    background: var(--color-surface);
     border-radius: var(--radius-lg);
-    padding: 22px 24px;
-    box-shadow: var(--shadow-card);
+    padding: var(--sp-card);
+    box-shadow: var(--elev-1);
     border: 1px solid var(--border-card);
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-stack);
 }
 
 .card > :first-child {
@@ -604,7 +645,7 @@ a:hover {
 
 .card p {
     max-width: var(--measure-readable);
-    line-height: var(--leading-relaxed);
+    line-height: var(--leading-normal);
 }
 
 .card .section-h:first-child,
@@ -615,12 +656,12 @@ a:hover {
 .section-title {
     font-family: var(--font-display);
     font-size: var(--text-2xs);
-    letter-spacing: 0.14em;
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
-    font-weight: 700;
-    line-height: var(--leading-snug);
-    margin-bottom: 4px;
+    color: var(--label-color);
+    font-weight: var(--label-weight);
+    line-height: var(--label-leading);
+    margin-bottom: var(--sp-1);
 }
 
 .section-h {
@@ -628,7 +669,7 @@ a:hover {
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: var(--leading-snug);
-    margin-bottom: 10px;
+    margin-bottom: var(--sp-3);
 }
 
 .section-h--flush {
@@ -638,8 +679,8 @@ a:hover {
 .quickstart-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
-    margin-top: 14px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
 }
 
 .qs-card {
@@ -703,7 +744,7 @@ a:hover {
 .two-col-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 14px;
+    gap: var(--sp-3);
 }
 
 .card-top-positive {
@@ -757,16 +798,16 @@ a:hover {
 .tracker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 16px;
-    margin-bottom: 18px;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-5);
 }
 
 .form-card {
-    background: var(--bg-card);
+    background: var(--color-surface);
     border-radius: var(--radius-lg);
-    padding: 20px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
+    padding: var(--sp-card);
+    border: 1px solid var(--color-outline);
+    box-shadow: var(--elev-1);
 }
 
 .form-card.accent-teal {
@@ -853,7 +894,7 @@ a:hover {
 
 .btn:not(.btn-ghost):not(.btn-danger) {
     background: var(--teal);
-    color: #fff;
+    color: var(--color-on-primary);
 }
 
 .btn-ghost {
@@ -3738,7 +3779,7 @@ a:hover {
         z-index: 50;
         transform: translateX(-100%);
         transition: transform 0.2s ease;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+        box-shadow: var(--elev-2);
     }
     .sidebar.open {
         transform: translateX(0);
@@ -3750,23 +3791,23 @@ a:hover {
 
 .food-swaps-page {
     margin: 0;
-    padding: 0 10px 4px;
+    padding: 0 var(--sp-3) var(--sp-1);
 }
 
 .food-swaps-page__inner {
     max-width: 52rem;
     margin: 0 auto;
-    padding-bottom: 16px;
+    padding-bottom: var(--sp-4);
 }
 
 .food-swaps-hero {
     position: relative;
-    margin: 0 0 14px;
-    padding: 18px 18px 20px;
+    margin: 0 0 var(--sp-3);
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
     border-radius: var(--radius-lg);
     background: linear-gradient(152deg, #fff 0%, #f7faf7 38%, var(--teal-tint) 62%, var(--gold-tint) 100%);
     border: 1px solid var(--border-card);
-    box-shadow: var(--shadow-card), 0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+    box-shadow: var(--elev-1), 0 0 0 1px rgba(255, 255, 255, 0.65) inset;
     overflow: hidden;
 }
 
@@ -3834,17 +3875,17 @@ a:hover {
 
 .food-swaps-hero__lead {
     max-width: 40rem;
-    font-size: 14px;
-    line-height: 1.52;
-    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-meta-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    margin-top: 12px;
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
 }
 
 .food-swaps-chip {
@@ -3859,14 +3900,14 @@ a:hover {
     background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba(31, 61, 46, 0.1);
     color: var(--teal-deep);
-    box-shadow: 0 1px 2px rgba(22, 32, 31, 0.04);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-hero__plate {
-    margin: 8px 0 0;
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--text-secondary);
+    margin: var(--sp-2) 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-hero__plate-link {
@@ -3889,16 +3930,16 @@ a:hover {
 }
 
 .food-swaps-hero__flow {
-    margin: 10px 0 0;
+    margin: var(--sp-3) 0 0;
     max-width: 40rem;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-hero__flow-strong {
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--color-on-surface);
 }
 
 .food-swaps-hero__flow-link {
@@ -3922,57 +3963,57 @@ a:hover {
 .food-swaps-section-head {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-bottom: 2px;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-1);
 }
 
 .food-swaps-section-kicker {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.18em;
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
     color: var(--lacbis-teal);
 }
 
 .food-swaps-section-lead {
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--text-secondary);
-    margin: 0 0 12px;
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
+    margin: 0 0 var(--sp-3);
     max-width: 42rem;
 }
 
 .food-swaps-toc {
-    margin-bottom: 18px;
-    padding: 16px 18px;
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 14px rgba(22, 32, 31, 0.04);
+    margin-bottom: var(--sp-4);
+    padding: var(--sp-4) var(--sp-4);
+    border: 1px solid var(--color-outline);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-toc-label {
     display: block;
-    font-size: 10px;
-    letter-spacing: 0.14em;
+    font-size: var(--label-size);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    font-weight: 700;
-    color: var(--text-tertiary);
-    margin-bottom: 10px;
+    font-weight: var(--label-weight);
+    color: var(--label-color);
+    margin-bottom: var(--sp-3);
 }
 
 .food-swaps-toc-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--sp-2);
 }
 
 .food-swaps-toc-btn {
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 600;
-    padding: 7px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-outline);
+    background: var(--color-surface);
     color: var(--teal-deep);
     cursor: pointer;
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
@@ -3981,23 +4022,23 @@ a:hover {
 
 .food-swaps-toc-btn:hover {
     border-color: var(--sage);
-    box-shadow: 0 2px 10px rgba(31, 61, 46, 0.08);
+    box-shadow: var(--elev-2);
     transform: translateY(-1px);
 }
 
 .food-swaps-toc--pick {
-    margin-bottom: 14px;
+    margin-bottom: var(--sp-3);
 }
 
 .food-swaps-toc-buttons--grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-    gap: 8px;
+    gap: var(--sp-2);
 }
 
 .food-swaps-toc-btn--featured {
     grid-column: 1 / -1;
-    padding: 10px 14px;
+    padding: var(--sp-3) var(--sp-4);
     font-weight: 700;
     border-color: rgba(31, 61, 46, 0.18);
     background: linear-gradient(165deg, #fff 0%, var(--teal-tint) 100%);
@@ -4014,11 +4055,11 @@ a:hover {
 /* Food swaps — tabbed main content */
 
 .food-swaps-tabs-shell {
-    background: var(--bg-card);
+    background: var(--color-surface);
     border-radius: calc(var(--radius-lg) + 2px);
     border: 1px solid var(--border-card);
-    box-shadow: var(--shadow-card);
-    margin-bottom: 12px;
+    box-shadow: var(--elev-1);
+    margin-bottom: var(--sp-3);
     overflow: hidden;
 }
 
@@ -4026,38 +4067,38 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 6px 12px;
+    gap: var(--sp-2) var(--sp-3);
     margin: 0;
-    padding: 8px 14px 9px;
-    border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(245, 239, 227, 0.65) 0%, var(--bg-card) 72%);
+    padding: var(--sp-2) var(--sp-4) var(--sp-3);
+    border-bottom: 1px solid var(--color-outline);
+    background: linear-gradient(180deg, rgba(245, 239, 227, 0.65) 0%, var(--color-surface) 72%);
 }
 
 .food-swaps-tabs-ribbon__label {
     flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.16em;
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
+    color: var(--label-color);
 }
 
 .food-swaps-tabs-ribbon__hint {
     margin: 0;
     flex: 1 1 12rem;
     min-width: 0;
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-tablist-wrap {
     position: sticky;
     top: var(--appbar-h);
     z-index: 8;
-    background: linear-gradient(180deg, #faf8f4 0%, var(--bg-card) 100%);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(22, 32, 31, 0.04);
+    background: linear-gradient(180deg, #faf8f4 0%, var(--color-surface) 100%);
+    border-bottom: 1px solid var(--color-outline);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-tablist-wrap--fade {
@@ -4077,12 +4118,12 @@ a:hover {
 
 .food-swaps-tablist-wrap--fade::before {
     left: 0;
-    background: linear-gradient(90deg, var(--bg-card) 0%, transparent 100%);
+    background: linear-gradient(90deg, var(--color-surface) 0%, transparent 100%);
 }
 
 .food-swaps-tablist-wrap--fade::after {
     right: 0;
-    background: linear-gradient(270deg, var(--bg-card) 0%, transparent 100%);
+    background: linear-gradient(270deg, var(--color-surface) 0%, transparent 100%);
 }
 
 .food-swaps-tablist-scroll {
@@ -4094,22 +4135,22 @@ a:hover {
 .food-swaps-tablist {
     display: flex;
     flex-wrap: nowrap;
-    gap: 6px;
-    padding: 8px 12px 9px;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3) var(--sp-3);
     min-width: min-content;
 }
 
 .food-swaps-tab {
     flex: 0 0 auto;
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 600;
     letter-spacing: -0.01em;
-    padding: 6px 12px;
+    padding: var(--sp-2) var(--sp-3);
     border-radius: 999px;
     border: 1px solid rgba(220, 214, 200, 0.95);
     background: rgba(255, 255, 255, 0.96);
-    color: var(--text-secondary);
+    color: var(--color-on-surface-variant);
     cursor: pointer;
     white-space: nowrap;
     transition: border-color 0.16s, background 0.16s, color 0.16s, box-shadow 0.16s;
@@ -4118,19 +4159,19 @@ a:hover {
 .food-swaps-tab:hover {
     border-color: rgba(31, 61, 46, 0.22);
     color: var(--teal-deep);
-    box-shadow: 0 2px 10px rgba(31, 61, 46, 0.06);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-tab--active {
     border-color: rgba(31, 61, 46, 0.28);
     background: linear-gradient(165deg, #fff 0%, var(--teal-tint) 100%);
     color: var(--teal-deep);
-    box-shadow: 0 0 0 1px rgba(31, 61, 46, 0.08), 0 4px 14px rgba(31, 61, 46, 0.08);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-tabpanels {
-    padding: 10px 12px 14px;
-    background: linear-gradient(180deg, rgba(245, 239, 227, 0.28) 0%, var(--bg-card) 40%);
+    padding: var(--sp-3) var(--sp-3) var(--sp-4);
+    background: linear-gradient(180deg, rgba(245, 239, 227, 0.28) 0%, var(--color-surface) 40%);
 }
 
 .food-swaps-tabpanels [hidden] {
@@ -4141,30 +4182,30 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px 16px;
-    padding: 12px 14px 14px;
-    border-top: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(245, 239, 227, 0.32) 0%, var(--bg-card) 65%);
+    gap: var(--sp-3) var(--sp-4);
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+    border-top: 1px solid var(--color-outline);
+    background: linear-gradient(180deg, rgba(245, 239, 227, 0.32) 0%, var(--color-surface) 65%);
 }
 
 .food-swaps-next__label {
     flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
+    color: var(--label-color);
 }
 
 .food-swaps-next__links {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 16px;
+    gap: var(--sp-2) var(--sp-4);
 }
 
 .food-swaps-next__link {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--teal-deep);
     text-decoration: none;
@@ -4189,17 +4230,17 @@ a:hover {
 
 .food-swaps-tabpanels [role='tabpanel']>.card.food-swaps-top-ten--in-tabs,
 .food-swaps-tabpanels [role='tabpanel']>.card.food-swaps-why--in-tabs {
-    padding: 12px 14px 14px;
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
 }
 
 .food-swaps-tabpanels [role='tabpanel']>.card .section-h--flush {
-    margin-bottom: 6px;
+    margin-bottom: var(--sp-2);
 }
 
 .food-swaps-top-ten {
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-5);
     border: 1px solid var(--border-card);
-    box-shadow: 0 1px 2px rgba(22, 32, 31, 0.04), 0 12px 32px rgba(22, 32, 31, 0.06);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-top-list {
@@ -4208,14 +4249,14 @@ a:hover {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-2);
 }
 
 .food-swaps-top-item {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 10px 14px;
-    padding: 12px 14px;
+    gap: var(--sp-3) var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background: linear-gradient(165deg, #fff 0%, #faf9f6 100%);
@@ -4224,13 +4265,13 @@ a:hover {
 
 .food-swaps-top-item:hover {
     border-color: rgba(31, 61, 46, 0.18);
-    box-shadow: 0 6px 22px rgba(22, 32, 31, 0.06);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-top-item--hero {
     border-color: rgba(31, 61, 46, 0.16);
     background: linear-gradient(128deg, var(--teal-tint) 0%, #fff 52%, var(--gold-tint) 100%);
-    box-shadow: 0 0 0 1px rgba(31, 61, 46, 0.05), 0 8px 28px rgba(31, 61, 46, 0.07);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-top-rank {
@@ -4252,12 +4293,12 @@ a:hover {
     font-size: 15px;
     color: #fff;
     background: linear-gradient(145deg, var(--teal) 0%, var(--teal-deep) 100%);
-    box-shadow: 0 3px 10px rgba(21, 42, 32, 0.25);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-top-item--hero .food-swaps-top-rank__circle {
     background: linear-gradient(145deg, var(--lacbis-teal) 0%, var(--teal) 100%);
-    box-shadow: 0 4px 14px rgba(62, 192, 163, 0.35);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-top-badge {
@@ -4303,7 +4344,7 @@ a:hover {
 .food-swaps-arrow-title__pill--from {
     background: var(--slate-soft);
     color: var(--slate);
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-outline);
 }
 
 .food-swaps-arrow-title__pill--to {
@@ -4326,20 +4367,20 @@ a:hover {
 
 .food-swaps-top-body {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 
 /* Category blocks */
 
 .food-swaps-category-card {
-    margin-bottom: 20px;
+    margin-bottom: var(--sp-5);
     padding: 0;
     overflow: hidden;
     border: 1px solid var(--border-card);
-    box-shadow: 0 1px 2px rgba(22, 32, 31, 0.04), 0 12px 36px rgba(22, 32, 31, 0.055);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-category-card::before {
@@ -4381,10 +4422,10 @@ a:hover {
 
 .food-swaps-cat-head {
     display: flex;
-    gap: 12px;
-    padding: 14px 14px 12px;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);
     background: linear-gradient(118deg, var(--fs-cat-soft) 0%, #fff 58%, #fff 100%);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--color-outline);
 }
 
 .food-swaps-cat-head__icon {
@@ -4398,7 +4439,7 @@ a:hover {
     color: var(--fs-cat);
     background: linear-gradient(160deg, #fff 0%, rgba(255, 255, 255, 0.65) 100%);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 4px 14px rgba(22, 32, 31, 0.07);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-cat-head__text {
@@ -4411,32 +4452,32 @@ a:hover {
 
 .food-swaps-cat-lead {
     margin: 0;
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-row-cards {
-    padding: 10px 12px 12px;
+    padding: var(--sp-3) var(--sp-3) var(--sp-3);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background: linear-gradient(180deg, rgba(245, 239, 227, 0.4) 0%, var(--bg-card) 28%);
+    gap: var(--sp-2);
+    background: linear-gradient(180deg, rgba(245, 239, 227, 0.4) 0%, var(--color-surface) 28%);
 }
 
 .food-swaps-swap-card {
     position: relative;
-    padding: 10px 12px 11px 11px;
+    padding: var(--sp-3) var(--sp-3) var(--sp-3) 11px;
     border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: #fff;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 1) inset, 0 2px 8px rgba(22, 32, 31, 0.03);
+    border: 1px solid var(--color-outline);
+    background: var(--color-surface);
+    box-shadow: var(--elev-1);
     transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s;
 }
 
 .food-swaps-swap-card:hover {
     border-color: rgba(31, 61, 46, 0.16);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 1) inset, 0 10px 28px rgba(22, 32, 31, 0.07);
+    box-shadow: var(--elev-2);
     transform: translateY(-1px);
 }
 
@@ -4479,12 +4520,12 @@ a:hover {
 
 .food-swaps-swap-label {
     display: block;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
-    color: var(--text-tertiary);
-    margin-bottom: 3px;
+    color: var(--label-color);
+    margin-bottom: var(--sp-1);
 }
 
 .food-swaps-swap-col--to .food-swaps-swap-label {
@@ -4493,10 +4534,10 @@ a:hover {
 
 .food-swaps-swap-text {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 600;
-    line-height: 1.4;
-    color: var(--text-primary);
+    line-height: var(--leading-snug);
+    color: var(--color-on-surface);
 }
 
 .food-swaps-swap-col--to .food-swaps-swap-text {
@@ -4517,10 +4558,10 @@ a:hover {
 }
 
 .food-swaps-swap-details {
-    margin-top: 8px;
+    margin-top: var(--sp-2);
     border-radius: var(--radius-sm);
-    border: 1px solid rgba(220, 214, 200, 0.85);
-    background: linear-gradient(180deg, rgba(250, 249, 246, 0.9) 0%, #fff 100%);
+    border: 1px solid var(--color-outline);
+    background: linear-gradient(180deg, rgba(250, 249, 246, 0.9) 0%, var(--color-surface) 100%);
     overflow: hidden;
 }
 
@@ -4528,12 +4569,12 @@ a:hover {
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
     cursor: pointer;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
+    font-size: var(--label-size);
+    font-weight: var(--label-weight);
+    letter-spacing: var(--label-tracking);
     text-transform: uppercase;
     color: var(--gold);
     user-select: none;
@@ -4561,10 +4602,10 @@ a:hover {
 }
 
 .food-swaps-swap-details__body {
-    padding: 0 10px 10px 24px;
-    font-size: 12px;
-    line-height: 1.48;
-    color: var(--text-secondary);
+    padding: 0 var(--sp-3) var(--sp-3) var(--sp-6);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .swap-impact {
@@ -4620,36 +4661,36 @@ a:hover {
 }
 
 .food-swaps-why {
-    margin-top: 4px;
+    margin-top: var(--sp-1);
     border: 1px solid var(--border-card);
-    box-shadow: 0 1px 2px rgba(22, 32, 31, 0.04), 0 10px 30px rgba(22, 32, 31, 0.05);
+    box-shadow: var(--elev-1);
 }
 
 .food-swaps-pillar-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
-    margin-top: 8px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-2);
 }
 
 .food-swaps-pillar {
     position: relative;
-    padding: 12px 12px 12px 46px;
+    padding: var(--sp-3) var(--sp-3) var(--sp-3) 46px;
     border-radius: var(--radius);
     background: linear-gradient(168deg, #fff 0%, #faf9f6 100%);
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-outline);
     transition: border-color 0.16s, box-shadow 0.16s;
 }
 
 .food-swaps-pillar:hover {
     border-color: rgba(31, 61, 46, 0.14);
-    box-shadow: 0 6px 20px rgba(22, 32, 31, 0.05);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-pillar__step {
     position: absolute;
-    left: 10px;
-    top: 12px;
+    left: var(--sp-3);
+    top: var(--sp-3);
     width: 26px;
     height: 26px;
     border-radius: 8px;
@@ -4660,33 +4701,33 @@ a:hover {
     font-weight: 800;
     color: #fff;
     background: linear-gradient(145deg, var(--lacbis-navy) 0%, var(--teal-deep) 100%);
-    box-shadow: 0 2px 8px rgba(30, 58, 95, 0.25);
+    box-shadow: var(--elev-2);
 }
 
 .food-swaps-pillar h3 {
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 700;
-    margin: 0 0 4px;
+    margin: 0 0 var(--sp-1);
     color: var(--teal-deep);
 }
 
 .food-swaps-pillar p {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface-variant);
 }
 
 .food-swaps-rule {
-    margin: 12px 0 0;
-    padding: 10px 12px;
+    margin: var(--sp-3) 0 0;
+    padding: var(--sp-3) var(--sp-3);
     border-radius: var(--radius);
     border: 1px solid rgba(201, 162, 74, 0.35);
     background: linear-gradient(90deg, var(--gold-tint) 0%, #fff 100%);
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 600;
-    line-height: 1.45;
-    color: var(--text-primary);
+    line-height: var(--leading-normal);
+    color: var(--color-on-surface);
 }
 
 @media (max-width: 640px) {
@@ -4717,14 +4758,15 @@ a:hover {
 .card.plate-meal-builder {
     /* Cap meal-lines stack height; list scrolls inside. Override in devtools or here if you want a shorter/taller viewport */
     --meal-line-list-max-height: min(36vh, 240px);
-    padding: 22px 24px 24px;
-    border: 1px solid rgba(220, 214, 200, 0.92);
-    box-shadow: 0 1px 2px rgba(22, 32, 31, 0.04), 0 10px 36px rgba(22, 32, 31, 0.065);
+    padding: var(--sp-card);
+    padding-bottom: var(--sp-5);
+    border: 1px solid var(--border-card);
+    box-shadow: var(--elev-1);
 }
 
 @media (max-width: 640px) {
     .card.plate-meal-builder {
-        padding: 18px 16px 20px;
+        padding: var(--sp-4) var(--sp-4) var(--sp-5);
     }
 }
 
@@ -4733,7 +4775,7 @@ a:hover {
 }
 
 .plate-meal-builder {
-    margin: 0 0 18px;
+    margin: 0 0 var(--sp-5);
     /* Leave room under the sticky summary when scrollIntoView jumps here */
     scroll-margin-top: calc(var(--appbar-h) + 170px);
 }
