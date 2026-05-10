@@ -2,10 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   emptyBaseline,
   exportProgressJson,
+  mergeCsvMeasurements,
   useProgressStore,
 } from '../store/progressStore'
 import type { Baseline, ProgressEntry } from '../types/progress'
 import { computePersonal, computeTgHdl, computeWHtR } from '../domain/personalisation'
+import {
+  applyFullBackupDocument,
+  parseFullBackupDocument,
+  serializeFullBackup,
+} from '../domain/appBackup'
+import { parseMeasurementsCsv } from '../domain/csvImport'
 import { ProgressCharts } from '../components/ProgressCharts'
 
 const PROTOCOL_KEYS = [
@@ -41,6 +48,7 @@ export function ProgressPage() {
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [eWeight, setEWeight] = useState('')
   const [eWaist, setEWaist] = useState('')
+  const [eSteps, setESteps] = useState('')
   const [eTg, setETg] = useState('')
   const [eHdl, setEHdl] = useState('')
   const [eAdh, setEAdh] = useState('')
@@ -49,6 +57,8 @@ export function ProgressPage() {
   const adhOverride = useRef(false)
   const [status, setStatus] = useState<{ msg: string; kind: 'ok' | 'warn' | 'empty' } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const fullBackupRef = useRef<HTMLInputElement>(null)
+  const csvRef = useRef<HTMLInputElement>(null)
 
   // Sync draft baseline when store baseline changes (import / clear / other tab).
   useEffect(() => {
@@ -103,10 +113,12 @@ export function ProgressPage() {
       window.alert('Please pick a date.')
       return
     }
+    const stepsRaw = num(eSteps)
     const entry: ProgressEntry = {
       date,
       weight: num(eWeight),
       waist: num(eWaist),
+      steps: stepsRaw == null ? null : Math.round(stepsRaw),
       tg: num(eTg),
       hdl: num(eHdl),
       adherence: eAdh === '' ? null : parseFloat(eAdh),
@@ -115,6 +127,7 @@ export function ProgressPage() {
     if (
       entry.weight == null &&
       entry.waist == null &&
+      entry.steps == null &&
       entry.tg == null &&
       entry.hdl == null &&
       entry.adherence == null
@@ -129,6 +142,7 @@ export function ProgressPage() {
     }
     setEWeight('')
     setEWaist('')
+    setESteps('')
     setETg('')
     setEHdl('')
     setEAdh('')
@@ -142,6 +156,7 @@ export function ProgressPage() {
   const clearEntryForm = () => {
     setEWeight('')
     setEWaist('')
+    setESteps('')
     setETg('')
     setEHdl('')
     setEAdh('')
@@ -175,6 +190,62 @@ export function ProgressPage() {
         showStatus(`Imported ${data.entries.length} entries.`, 'ok')
       } catch (err) {
         window.alert(`Could not import file: ${(err as Error).message}`)
+      }
+    }
+    reader.readAsText(file)
+    ev.target.value = ''
+  }
+
+  const exportFullBackupClick = () => {
+    const blob = new Blob([serializeFullBackup()], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `waist-reset-full-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    showStatus('Full backup downloaded (OpenAI key redacted).', 'ok')
+  }
+
+  const onImportFullBackup: React.ChangeEventHandler<HTMLInputElement> = (ev) => {
+    const file = ev.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const doc = parseFullBackupDocument(String(reader.result))
+        if (
+          !window.confirm(
+            'Restore full backup? This overwrites progress, saved meals, plate builder, food prefs, reviews, and related data in this browser. The page will reload.',
+          )
+        )
+          return
+        applyFullBackupDocument(doc)
+        window.location.reload()
+      } catch (err) {
+        window.alert(`Could not restore backup: ${(err as Error).message}`)
+      }
+    }
+    reader.readAsText(file)
+    ev.target.value = ''
+  }
+
+  const onImportCsv: React.ChangeEventHandler<HTMLInputElement> = (ev) => {
+    const file = ev.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const { rows, errors } = parseMeasurementsCsv(String(reader.result))
+        if (rows.length === 0) {
+          window.alert(errors.length ? errors.slice(0, 10).join('\n') : 'No rows to import.')
+          return
+        }
+        mergeCsvMeasurements(rows)
+        const note = errors.length ? ` (${errors.length} parse note${errors.length === 1 ? '' : 's'})` : ''
+        showStatus(`Merged ${rows.length} CSV row(s) into your log.${note}`, errors.length ? 'warn' : 'ok')
+      } catch (err) {
+        window.alert(`CSV import failed: ${(err as Error).message}`)
       }
     }
     reader.readAsText(file)
@@ -427,6 +498,20 @@ export function ProgressPage() {
               <input id="e-waist" type="number" step={0.1} value={eWaist} onChange={(e) => setEWaist(e.target.value)} placeholder="e.g. 101.5" />
             </div>
           </div>
+          <div className="input-row">
+            <div className="field">
+              <label htmlFor="e-steps">Steps (optional)</label>
+              <input
+                id="e-steps"
+                type="number"
+                step={1}
+                min={0}
+                value={eSteps}
+                onChange={(e) => setESteps(e.target.value)}
+                placeholder="e.g. 8420 · or import CSV"
+              />
+            </div>
+          </div>
 
           <div className="checklist-wrap">
             <div className="checklist-label">
@@ -556,12 +641,29 @@ export function ProgressPage() {
           </div>
           <div className="log-actions">
             <button type="button" className="btn btn-sm" onClick={exportJson}>
-              ⬇ Backup to computer
+              ⬇ Progress JSON
             </button>
             <button type="button" className="btn btn-sm btn-ghost" onClick={() => fileRef.current?.click()}>
-              Restore from file
+              Restore progress JSON
             </button>
             <input ref={fileRef} type="file" accept=".json" className="hidden-file" onChange={onImportFile} />
+            <button type="button" className="btn btn-sm" onClick={exportFullBackupClick}>
+              ⬇ Full app backup
+            </button>
+            <button type="button" className="btn btn-sm btn-ghost" onClick={() => fullBackupRef.current?.click()}>
+              Restore full backup
+            </button>
+            <input
+              ref={fullBackupRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden-file"
+              onChange={onImportFullBackup}
+            />
+            <button type="button" className="btn btn-sm btn-ghost" onClick={() => csvRef.current?.click()}>
+              Import CSV (weight/steps)
+            </button>
+            <input ref={csvRef} type="file" accept=".csv,text/csv" className="hidden-file" onChange={onImportCsv} />
             <button
               type="button"
               className="btn btn-sm btn-danger"
@@ -578,8 +680,10 @@ export function ProgressPage() {
           </div>
         </div>
         <div className="storage-note">
-          Your data is saved in this browser (localStorage). Use <b>Backup</b> for a portable JSON file — same
-          format as the original HTML dashboard (<code>vat_progress_v1</code>).
+          Data stays in this browser. <b>Progress JSON</b> is baseline + entries only (legacy-compatible).{' '}
+          <b>Full app backup</b> includes meals, plate builder, food prefs, weekly reviews, and your custom foods;
+          OpenAI keys are stripped from exports. <b>CSV import</b> merges rows by date (columns like{' '}
+          <code>date</code>, <code>weight</code>, <code>steps</code>).
         </div>
         {entries.length === 0 ? (
           <div className="empty-state">
@@ -594,6 +698,7 @@ export function ProgressPage() {
                   <th>Date</th>
                   <th>Weight</th>
                   <th>Waist</th>
+                  <th>Steps</th>
                   <th>WHtR</th>
                   <th>TG</th>
                   <th>HDL</th>
@@ -614,6 +719,7 @@ export function ProgressPage() {
                       </td>
                       <td>{e.weight != null ? fmt(e.weight, 1) : '—'}</td>
                       <td>{e.waist != null ? fmt(e.waist, 1) : '—'}</td>
+                      <td>{e.steps != null ? String(Math.round(e.steps)) : '—'}</td>
                       <td>{whtr != null ? fmt(whtr, 2) : '—'}</td>
                       <td>{e.tg ?? '—'}</td>
                       <td>{e.hdl ?? '—'}</td>

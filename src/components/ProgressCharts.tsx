@@ -18,11 +18,13 @@ export function ProgressCharts({ baseline, entries }: Props) {
   const weightRef = useRef<HTMLCanvasElement>(null)
   const tghdlRef = useRef<HTMLCanvasElement>(null)
   const adhRef = useRef<HTMLCanvasElement>(null)
+  const stepsRef = useRef<HTMLCanvasElement>(null)
   const charts = useRef<{
     waist?: ChartType
     weight?: ChartType
     tghdl?: ChartType
     adh?: ChartType
+    steps?: ChartType
   }>({})
 
   useEffect(() => {
@@ -198,6 +200,52 @@ export function ProgressCharts({ baseline, entries }: Props) {
       })
     }
 
+    if (stepsRef.current && !charts.current.steps) {
+      charts.current.steps = new Chart(stepsRef.current, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Steps',
+              data: [],
+              borderColor: '#1d4ed8',
+              backgroundColor: 'rgba(29, 78, 216, 0.12)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              pointRadius: 4,
+              fill: true,
+              spanGaps: true,
+            },
+            {
+              label: '8k target',
+              data: [],
+              borderColor: 'rgba(26, 138, 90, 0.55)',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          ...common,
+          plugins: {
+            ...common.plugins,
+            legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } },
+            tooltip: {
+              ...common.plugins.tooltip,
+              callbacks: { label: (c) => `${c.dataset.label}: ${fmt(c.parsed.y, 0)}` },
+            },
+          },
+          scales: {
+            ...common.scales,
+            y: { ...common.scales.y, beginAtZero: true, ticks: { callback: (v) => `${v}` } },
+          },
+        },
+      })
+    }
+
     if (adhRef.current && !charts.current.adh) {
       charts.current.adh = new Chart(adhRef.current, {
         type: 'bar',
@@ -280,6 +328,14 @@ export function ProgressCharts({ baseline, entries }: Props) {
       ad.data.datasets[0].data = e.map((x) => x.adherence) as (number | null)[]
       ad.update('none')
     }
+
+    const st = charts.current.steps
+    if (st) {
+      st.data.labels = labels
+      st.data.datasets[0].data = e.map((x) => x.steps ?? null) as (number | null)[]
+      st.data.datasets[1].data = Array(n).fill(8000)
+      st.update('none')
+    }
   }, [baseline, entries])
 
   return (
@@ -292,6 +348,15 @@ export function ProgressCharts({ baseline, entries }: Props) {
         <div className="chart-card">
           <h3>Weight (kg)</h3>
           <canvas ref={weightRef} />
+        </div>
+      </div>
+      <div className="chart-row">
+        <div className="chart-card">
+          <h3>Daily steps</h3>
+          <p className="muted small" style={{ marginTop: '-0.35rem', marginBottom: '0.5rem' }}>
+            Log on Today, enter on Progress, or import CSV. Reference line at 8,000 steps.
+          </p>
+          <canvas ref={stepsRef} />
         </div>
       </div>
       <div className="chart-row">

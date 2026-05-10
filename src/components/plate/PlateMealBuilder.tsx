@@ -13,6 +13,7 @@ import {
   sumMacros,
 } from "../../domain/plateMeal";
 import { usePlateBuilderStore } from "../../store/plateBuilderStore";
+import { useUserFoodsStore } from "../../store/userFoodsStore";
 import type { HealthFocus } from "../../domain/plateMeal";
 import { todayIsoDate, useMealLogStore } from "../../store/mealLogStore";
 import { PlateConfirmDialog } from "./builder/PlateConfirmDialog";
@@ -90,11 +91,17 @@ export function PlateMealBuilder({
   baseline,
 }: Props) {
   const {
-    raw: foods,
+    raw: libraryFoods,
     err: foodsErr,
     loading: foodsLoading,
     reload: reloadFoods,
   } = useFoods();
+  const userFoodEntries = useUserFoodsStore((s) => s.entries);
+  const foods = useMemo(() => {
+    const mine = userFoodEntries.map((e) => e.row);
+    if (!libraryFoods) return mine.length ? mine : null;
+    return [...mine, ...libraryFoods];
+  }, [userFoodEntries, libraryFoods]);
   const template = usePlateBuilderStore((s) => s.template);
   const healthFocus = usePlateBuilderStore((s) => s.healthFocus);
   const activeSlot = usePlateBuilderStore((s) => s.activeSlot);

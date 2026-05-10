@@ -1,13 +1,26 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useFoods } from '../domain/foods'
+import type { FoodRow } from '../domain/foods'
 import { FoodTypeIcon } from '../components/plate/FoodTypeIcon'
 import { foodTypeKind } from '../components/plate/foodTypeMeta'
+import { useUserFoodsStore } from '../store/userFoodsStore'
 
-export type { FoodRow } from '../domain/foods'
+export type { FoodRow }
 
 export function FoodsPage() {
   const { raw, err, loading } = useFoods()
+  const userEntries = useUserFoodsStore((s) => s.entries)
+  const addUserFood = useUserFoodsStore((s) => s.addEntry)
+  const removeUserFood = useUserFoodsStore((s) => s.removeEntry)
+
+  const [ufName, setUfName] = useState('')
+  const [ufQty, setUfQty] = useState('100 g')
+  const [ufBranch, setUfBranch] = useState<'General' | 'African'>('General')
+  const [ufKcal, setUfKcal] = useState('')
+  const [ufP, setUfP] = useState('')
+  const [ufF, setUfF] = useState('')
+  const [ufC, setUfC] = useState('')
   const [q, setQ] = useState('')
   const [branch, setBranch] = useState<'all' | 'General' | 'African'>('all')
   const [type, setType] = useState<string>('all')
@@ -40,6 +53,37 @@ export function FoodsPage() {
     return list
   }, [raw, branch, type, q, sortKey])
 
+  const saveUserFood = () => {
+    const kcal = parseFloat(ufKcal)
+    const p = parseFloat(ufP)
+    const f = parseFloat(ufF)
+    const c = parseFloat(ufC)
+    if (!ufName.trim()) {
+      window.alert('Enter a food name.')
+      return
+    }
+    if (!Number.isFinite(kcal) || !Number.isFinite(p) || !Number.isFinite(f) || !Number.isFinite(c)) {
+      window.alert('Enter kcal and macros (P / F / C) as numbers.')
+      return
+    }
+    const row: FoodRow = {
+      n: ufName.trim(),
+      b: ufBranch,
+      t: 'Custom',
+      qty: ufQty.trim() || '100 g',
+      kcal,
+      p,
+      f,
+      c,
+    }
+    addUserFood(row)
+    setUfName('')
+    setUfKcal('')
+    setUfP('')
+    setUfF('')
+    setUfC('')
+  }
+
   return (
     <section className="view active">
       <div className="topbar">
@@ -47,10 +91,85 @@ export function FoodsPage() {
           <div className="eyebrow">Reference</div>
           <h1>Food database</h1>
           <div className="topbar-sub">
-            Ported list from the legacy dashboard. Use with <Link to="/plate">Plate system</Link>. Sorting works on a
-            copy of the filtered list (source array is never mutated).
+            Ported list from the legacy dashboard. Use with <Link to="/plate">Plate system</Link>. Add your own rows
+            below — they appear in the plate search and in full app backups.
           </div>
         </div>
+      </div>
+
+      <div className="card">
+        <div className="section-title">Your foods</div>
+        <p className="food-count muted" style={{ marginBottom: '1rem' }}>
+          Saved on this device only. Included when you use <strong>Full app backup</strong> on{' '}
+          <Link to="/progress">My Progress</Link>.
+        </p>
+        <div className="food-toolbar" style={{ padding: 0, border: 'none', boxShadow: 'none' }}>
+          <div className="food-filters" style={{ flexWrap: 'wrap' }}>
+            <label className="field food-field-grow">
+              <span>Name</span>
+              <input value={ufName} onChange={(e) => setUfName(e.target.value)} placeholder="e.g. Homemade stew" />
+            </label>
+            <label className="field">
+              <span>Serving</span>
+              <input value={ufQty} onChange={(e) => setUfQty(e.target.value)} placeholder="100 g" />
+            </label>
+            <label className="field">
+              <span>Branch</span>
+              <select value={ufBranch} onChange={(e) => setUfBranch(e.target.value as typeof ufBranch)}>
+                <option value="General">General</option>
+                <option value="African">African</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Kcal</span>
+              <input value={ufKcal} onChange={(e) => setUfKcal(e.target.value)} inputMode="decimal" />
+            </label>
+            <label className="field">
+              <span>P</span>
+              <input value={ufP} onChange={(e) => setUfP(e.target.value)} inputMode="decimal" />
+            </label>
+            <label className="field">
+              <span>F</span>
+              <input value={ufF} onChange={(e) => setUfF(e.target.value)} inputMode="decimal" />
+            </label>
+            <label className="field">
+              <span>C</span>
+              <input value={ufC} onChange={(e) => setUfC(e.target.value)} inputMode="decimal" />
+            </label>
+            <div className="field" style={{ alignSelf: 'flex-end' }}>
+              <button type="button" className="btn btn-sm" onClick={saveUserFood}>
+                Add to my foods
+              </button>
+            </div>
+          </div>
+        </div>
+        {userEntries.length === 0 ? (
+          <p className="muted">No custom foods yet.</p>
+        ) : (
+          <ul className="user-foods-list" style={{ listStyle: 'none', padding: 0, margin: '1rem 0 0' }}>
+            {userEntries.map((e) => (
+              <li
+                key={e.id}
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem 1rem',
+                  alignItems: 'center',
+                  padding: '0.5rem 0',
+                  borderBottom: '1px solid var(--hairline, #e8e4dc)',
+                }}
+              >
+                <strong>{e.row.n}</strong>
+                <span className="muted">
+                  {e.row.qty} · P{e.row.p} F{e.row.f} C{e.row.c} · {e.row.kcal} kcal · {e.row.b}
+                </span>
+                <button type="button" className="btn btn-sm btn-ghost" onClick={() => removeUserFood(e.id)}>
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="card food-toolbar">

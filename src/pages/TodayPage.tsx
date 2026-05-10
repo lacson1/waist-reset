@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProgressStore, mergeTodayChecklist, quickLogToday } from '../store/progressStore'
+import { adherenceLogStreak } from '../domain/adherenceStreak'
 import { computePersonal, currentPhase, greetingText, phaseKcal, phaseKcalNote } from '../domain/personalisation'
 import { buildRecommendations, DEFAULT_CHECKLIST_ITEMS } from '../domain/coach'
 import { computeNextActions, fastStatus } from '../domain/todayActions'
@@ -26,6 +27,7 @@ export function TodayPage() {
     () => buildRecommendations({ baseline, entries }).slice(0, 2),
     [baseline, entries],
   )
+  const adherenceStreakDays = useMemo(() => adherenceLogStreak(entries), [entries])
 
   const today = new Date().toISOString().slice(0, 10)
   const todayEntry = entries.find((e) => e.date === today)
@@ -93,6 +95,14 @@ export function TodayPage() {
           <div className="kpi-label">Fast / feed</div>
           <div className="kpi-value">{fast.label}</div>
           <div className="kpi-sub">{fast.sub}</div>
+        </div>
+        <div className="kpi plum">
+          <div className="kpi-label">Adherence streak</div>
+          <div className="kpi-value">{adherenceStreakDays} days</div>
+          <div className="kpi-sub">
+            Days in a row with saved adherence.{' '}
+            <Link to="/progress">Full backup &amp; CSV import</Link>
+          </div>
         </div>
       </div>
 
@@ -227,6 +237,10 @@ export function TodayPage() {
             <label htmlFor="q-waist">Waist (cm)</label>
             <input id="q-waist" type="number" step={0.1} />
           </div>
+          <div className="field">
+            <label htmlFor="q-steps">Steps (optional)</label>
+            <input id="q-steps" type="number" step={1} min={0} placeholder="e.g. 8200" />
+          </div>
           <div className="field" style={{ alignSelf: 'flex-end' }}>
             <button
               type="button"
@@ -235,13 +249,19 @@ export function TodayPage() {
               onClick={() => {
                 const w = parseFloat((document.getElementById('q-weight') as HTMLInputElement)?.value || '')
                 const wa = parseFloat((document.getElementById('q-waist') as HTMLInputElement)?.value || '')
-                if (Number.isNaN(w) && Number.isNaN(wa)) {
-                  window.alert('Enter at least weight or waist.')
+                const st = parseFloat((document.getElementById('q-steps') as HTMLInputElement)?.value || '')
+                if (Number.isNaN(w) && Number.isNaN(wa) && Number.isNaN(st)) {
+                  window.alert('Enter at least weight, waist, or steps.')
                   return
                 }
-                quickLogToday(Number.isNaN(w) ? null : w, Number.isNaN(wa) ? null : wa)
+                quickLogToday(
+                  Number.isNaN(w) ? null : w,
+                  Number.isNaN(wa) ? null : wa,
+                  Number.isNaN(st) ? undefined : Math.round(st),
+                )
                 ;(document.getElementById('q-weight') as HTMLInputElement).value = ''
                 ;(document.getElementById('q-waist') as HTMLInputElement).value = ''
+                ;(document.getElementById('q-steps') as HTMLInputElement).value = ''
                 window.alert(`Logged for ${today}`)
               }}
             >
