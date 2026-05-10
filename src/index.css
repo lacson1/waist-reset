@@ -3888,6 +3888,37 @@ a:hover {
     color: var(--text-tertiary);
 }
 
+.food-swaps-hero__flow {
+    margin: 10px 0 0;
+    max-width: 40rem;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.food-swaps-hero__flow-strong {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.food-swaps-hero__flow-link {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    color: var(--teal);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: rgba(31, 61, 46, 0.28);
+}
+
+.food-swaps-hero__flow-link:hover {
+    color: var(--teal-deep);
+}
+
 .food-swaps-section-head {
     display: flex;
     flex-direction: column;
@@ -3954,6 +3985,31 @@ a:hover {
     transform: translateY(-1px);
 }
 
+.food-swaps-toc--pick {
+    margin-bottom: 14px;
+}
+
+.food-swaps-toc-buttons--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 8px;
+}
+
+.food-swaps-toc-btn--featured {
+    grid-column: 1 / -1;
+    padding: 10px 14px;
+    font-weight: 700;
+    border-color: rgba(31, 61, 46, 0.18);
+    background: linear-gradient(165deg, #fff 0%, var(--teal-tint) 100%);
+    color: var(--teal-deep);
+}
+
+@media (min-width: 640px) {
+    .food-swaps-toc-btn--featured {
+        grid-column: span 2;
+    }
+}
+
 
 /* Food swaps — tabbed main content */
 
@@ -4004,9 +4060,35 @@ a:hover {
     box-shadow: 0 4px 12px rgba(22, 32, 31, 0.04);
 }
 
+.food-swaps-tablist-wrap--fade {
+    position: relative;
+}
+
+.food-swaps-tablist-wrap--fade::before,
+.food-swaps-tablist-wrap--fade::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.food-swaps-tablist-wrap--fade::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--bg-card) 0%, transparent 100%);
+}
+
+.food-swaps-tablist-wrap--fade::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--bg-card) 0%, transparent 100%);
+}
+
 .food-swaps-tablist-scroll {
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-width: thin;
 }
 
 .food-swaps-tablist {
@@ -4053,6 +4135,46 @@ a:hover {
 
 .food-swaps-tabpanels [hidden] {
     display: none !important;
+}
+
+.food-swaps-next {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 12px 14px 14px;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(245, 239, 227, 0.32) 0%, var(--bg-card) 65%);
+}
+
+.food-swaps-next__label {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+}
+
+.food-swaps-next__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+}
+
+.food-swaps-next__link {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--teal-deep);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(31, 61, 46, 0.22);
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.food-swaps-next__link:hover {
+    color: var(--teal);
+    border-bottom-color: var(--lacbis-teal);
 }
 
 .food-swaps-tabpanels .food-swaps-top-ten--in-tabs,
@@ -4394,25 +4516,55 @@ a:hover {
     display: block;
 }
 
-.food-swaps-swap-why {
+.food-swaps-swap-details {
     margin-top: 8px;
-    padding: 8px 10px 9px;
     border-radius: var(--radius-sm);
     border: 1px solid rgba(220, 214, 200, 0.85);
-    background: linear-gradient(180deg, var(--bg-subtle) 0%, rgba(255, 255, 255, 0.65) 100%);
-    font-size: 12px;
-    line-height: 1.48;
-    color: var(--text-secondary);
+    background: linear-gradient(180deg, rgba(250, 249, 246, 0.9) 0%, #fff 100%);
+    overflow: hidden;
 }
 
-.food-swaps-swap-why-label {
-    display: block;
-    font-size: 9px;
+.food-swaps-swap-details__summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--gold);
-    margin-bottom: 3px;
+    user-select: none;
+}
+
+.food-swaps-swap-details__summary::-webkit-details-marker {
+    display: none;
+}
+
+.food-swaps-swap-details__summary::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    margin-top: -2px;
+    opacity: 0.75;
+    transition: transform 0.18s ease;
+}
+
+.food-swaps-swap-details[open] .food-swaps-swap-details__summary::before {
+    transform: rotate(45deg);
+    margin-top: 2px;
+}
+
+.food-swaps-swap-details__body {
+    padding: 0 10px 10px 24px;
+    font-size: 12px;
+    line-height: 1.48;
+    color: var(--text-secondary);
 }
 
 .swap-impact {
