@@ -5,6 +5,7 @@ import type { FoodTypeKind } from './foodTypeMeta'
 import { foodTypeKind } from './foodTypeMeta'
 import { FoodTypeGlyph } from './FoodTypeIcon'
 import { wrapPlatePickLabel } from './platePickLabelWrap'
+import { BowlGarnish, BowlGreens, PlateFoodArtDefs } from './PlateFoodArt'
 
 export type SoupBowlSlot = 'base' | 'protein' | 'leafy' | 'aromatics' | 'optional'
 
@@ -67,20 +68,6 @@ function BowlSteam() {
         strokeLinecap="round"
         pointerEvents="none"
       />
-    </>
-  )
-}
-
-function BowlDecor() {
-  return (
-    <>
-      <text className="plate-svg-label plate-svg-label--bowl-title" x="100" y="108" textAnchor="middle" pointerEvents="none">
-        One bowl
-      </text>
-      <text className="plate-svg-label plate-svg-label--bowl-sub" x="100" y="54" textAnchor="middle" pointerEvents="none">
-        Steam · aromatics · protein
-      </text>
-      <BowlSteam />
     </>
   )
 }
@@ -162,11 +149,12 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
             <stop offset="35%" stopColor="#ffffff" stopOpacity="0" />
             <stop offset="100%" stopColor="#5c6370" stopOpacity="0.2" />
           </radialGradient>
-          <radialGradient id={g('liquid')} cx="48%" cy="36%" r="72%">
-            <stop offset="0%" stopColor="#faf8fd" />
-            <stop offset="45%" stopColor="#d8d2e4" />
-            <stop offset="100%" stopColor="#6a6378" />
+          <radialGradient id={g('liquid')} cx="48%" cy="36%" r="78%">
+            <stop offset="0%" stopColor="#e89368" />
+            <stop offset="50%" stopColor="#c25a3a" />
+            <stop offset="100%" stopColor="#6e2812" />
           </radialGradient>
+          <PlateFoodArtDefs g={g} />
           <linearGradient id={g('surface')} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fff" stopOpacity="0" />
             <stop offset="45%" stopColor="#fff" stopOpacity="0.48" />
@@ -182,20 +170,11 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
           <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim')})`} stroke="#9aa3b0" strokeWidth="0.55" />
           <ellipse cx="100" cy="115" rx="92" ry="60" fill={`url(#${g('bowl-rim-shade')})`} />
         </g>
-        <ellipse cx="100" cy="105" rx="84" ry="50" fill={`url(#${g('liquid')})`} stroke="#8d8898" strokeWidth="0.65" strokeOpacity="0.5" />
+        <ellipse cx="100" cy="105" rx="84" ry="50" fill={`url(#${g('liquid')})`} stroke="#7c2810" strokeWidth="0.65" strokeOpacity="0.55" />
         <ellipse cx="100" cy="98" rx="72" ry="22" fill={`url(#${g('surface')})`} pointerEvents="none" />
-        <ellipse
-          cx="100"
-          cy="105"
-          rx="84"
-          ry="50"
-          fill="none"
-          stroke="#9b96a8"
-          strokeWidth="1"
-          strokeDasharray="4 5"
-          strokeOpacity="0.32"
-        />
-        <BowlDecor />
+        <BowlGreens g={g} />
+        <BowlGarnish />
+        <BowlSteam />
       </svg>
     )
   }
@@ -250,6 +229,7 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
             <stop offset="100%" stopColor={g0} />
           </linearGradient>
         ))}
+        <PlateFoodArtDefs g={g} />
       </defs>
 
       <ellipse cx="100" cy="179.5" rx="54" ry="5.8" fill="rgba(18, 16, 28, 0.09)" />
@@ -290,7 +270,8 @@ export function SoupBowlSvg(props: Partial<Props> = {}) {
           />
         ))}
         <ellipse cx="100" cy="98" rx="76" ry="20" fill={`url(#${g('surface')})`} pointerEvents="none" />
-        <ellipse cx="100" cy="105" rx="84" ry="50" fill="none" stroke="#9b96a8" strokeWidth="1" strokeDasharray="4 5" strokeOpacity="0.3" pointerEvents="none" />
+        <BowlGreens g={g} />
+        <BowlGarnish />
       </g>
 
       <text className="plate-svg-label plate-svg-label--bowl-sub" x="100" y="44" textAnchor="middle" pointerEvents="none">
