@@ -31,6 +31,8 @@ export interface ProgressEntry {
   date: string
   weight: number | null
   waist: number | null
+  /** Daily step count from manual entry, CSV import, or tracker export. */
+  steps: number | null
   tg: number | null
   hdl: number | null
   adherence: number | null

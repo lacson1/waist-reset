@@ -1,8 +1,16 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 import type { Baseline, ProgressEntry, ProgressState } from '../types/progress'
+import type { CsvMeasurementRow } from '../domain/csvImport'
 
 export const STORAGE_KEY = 'vat_progress_v1'
+
+function normalizeEntry(e: ProgressEntry): ProgressEntry {
+  return {
+    ...e,
+    steps: e.steps ?? null,
+  }
+}
 
 function parseStored(raw: string | null): ProgressState | null {
   if (!raw) return null
@@ -10,9 +18,10 @@ function parseStored(raw: string | null): ProgressState | null {
     const data = JSON.parse(raw) as unknown
     if (data && typeof data === 'object' && 'entries' in data) {
       const o = data as Record<string, unknown>
+      const rawEntries = Array.isArray(o.entries) ? (o.entries as ProgressEntry[]) : []
       return {
         baseline: (o.baseline as Baseline) ?? null,
-        entries: Array.isArray(o.entries) ? (o.entries as ProgressEntry[]) : [],
+        entries: rawEntries.map((row) => normalizeEntry(row)),
       }
     }
   } catch {
@@ -100,9 +109,12 @@ export const useProgressStore = create<ProgressStore>()(
       resetAll: () => set({ baseline: null, entries: [] }),
 
       importState: (data) => {
+        const entries = Array.isArray(data.entries)
+          ? data.entries.map((row) => normalizeEntry(row as ProgressEntry))
+          : []
         set({
           baseline: data.baseline ?? null,
-          entries: Array.isArray(data.entries) ? data.entries : [],
+          entries,
         })
       },
     }),
@@ -139,6 +151,7 @@ export function mergeTodayChecklist(
       adherence: adherencePct,
       weight: null,
       waist: null,
+      steps: null,
       tg: null,
       hdl: null,
       notes: '',
@@ -148,7 +161,11 @@ export function mergeTodayChecklist(
   useProgressStore.setState({ entries })
 }
 
-export function quickLogToday(weight: number | null, waist: number | null): void {
+export function quickLogToday(
+  weight: number | null,
+  waist: number | null,
+  steps?: number | null,
+): void {
   const today = new Date().toISOString().slice(0, 10)
   const entries = [...useProgressStore.getState().entries]
   const idx = entries.findIndex((e) => e.date === today)
@@ -158,17 +175,49 @@ export function quickLogToday(weight: number | null, waist: number | null): void
       ...cur,
       weight: weight ?? cur.weight,
       waist: waist ?? cur.waist,
+      steps: steps === undefined ? (cur.steps ?? null) : steps,
     }
   } else {
     entries.push({
       date: today,
       weight,
       waist,
+      steps: steps === undefined ? null : steps,
       tg: null,
       hdl: null,
       adherence: null,
       notes: '',
     })
+  }
+  entries.sort((a, b) => a.date.localeCompare(b.date))
+  useProgressStore.setState({ entries })
+}
+
+/** Merge CSV / tracker rows into the log without wiping unrelated fields. */
+export function mergeCsvMeasurements(rows: CsvMeasurementRow[]): void {
+  if (rows.length === 0) return
+  const entries = [...useProgressStore.getState().entries]
+  for (const row of rows) {
+    const idx = entries.findIndex((e) => e.date === row.date)
+    if (idx >= 0) {
+      const cur = entries[idx]
+      entries[idx] = {
+        ...cur,
+        weight: row.weight !== null ? row.weight : cur.weight,
+        steps: row.steps !== null ? row.steps : cur.steps ?? null,
+      }
+    } else {
+      entries.push({
+        date: row.date,
+        weight: row.weight,
+        waist: null,
+        steps: row.steps,
+        tg: null,
+        hdl: null,
+        adherence: null,
+        notes: '',
+      })
+    }
   }
   entries.sort((a, b) => a.date.localeCompare(b.date))
   useProgressStore.setState({ entries })
