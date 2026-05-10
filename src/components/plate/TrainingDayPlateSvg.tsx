@@ -3,6 +3,13 @@ import type { KeyboardEvent } from 'react'
 import type { PlatePickLine } from '../../domain/plateMeal'
 import { PlateRoundWedgeLabels } from './PlateRoundWedgeLabels'
 import { RoundPlateWedgeGradients } from './roundPlateWedgeGradients'
+import {
+  DrizzleAccent,
+  PlateFoodArtDefs,
+  ProteinCut,
+  SlowCarbs,
+  VegLeaves,
+} from './PlateFoodArt'
 
 export type TrainingDaySlot = 'veg' | 'protein' | 'carbs'
 
@@ -80,6 +87,7 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
           <stop offset="100%" stopColor="#5a6574" stopOpacity="0.22" />
         </radialGradient>
         <RoundPlateWedgeGradients idPrefix={g} fibreOrCarbs="carbs" />
+        <PlateFoodArtDefs g={g} />
         <radialGradient id={g('hub')} cx="32%" cy="32%" r="72%">
           <stop offset="0%" stopColor="#f8f9fb" />
           <stop offset="50%" stopColor="#eef1f3" />
@@ -150,6 +158,17 @@ export function TrainingDayPlateSvg({ activeSlot, interactive, onSlotSelect, slo
         aria-label="Quarter plate slow carbs"
         {...wedgeA11y('carbs')}
       />
+
+      <g clipPath={`url(#${g('clip-veg')})`}>
+        <VegLeaves g={g} />
+      </g>
+      <g clipPath={`url(#${g('clip-protein')})`}>
+        <ProteinCut g={g} />
+      </g>
+      <g clipPath={`url(#${g('clip-carbs')})`}>
+        <SlowCarbs g={g} />
+      </g>
+      <DrizzleAccent x={88} y={120} />
 
       <circle cx="100" cy="100" r="13" fill={`url(#${g('hub')})`} stroke="#b8c0c6" strokeWidth="1" pointerEvents="none" />
       <circle cx="100" cy="100" r="13" fill={`url(#${g('hub-shine')})`} pointerEvents="none" />
